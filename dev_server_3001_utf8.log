@@ -1,0 +1,61 @@
+﻿node.exe :  ÔÜá 
+Warning: Next.js 
+inferred your 
+workspace root, but it 
+may not be correct.
+No C:\Program Files\nod
+ejs\npx.ps1:29 
+caractere:3
++   & $NODE_EXE 
+$NPX_CLI_JS $args
++   ~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~
+    + CategoryInfo     
+         : 
+NotSpecified:     ( 
+ÔÜá Warning: N...n    
+ot be correct.:Strin   
+ g) [], RemoteExcepti  
+  on
+    + 
+FullyQualifiedErro    
+rId : NativeCommandE   
+ rror
+ 
+ We detected multiple 
+lockfiles and selected 
+the directory of 
+C:\Users\Arthur Perdiga
+o\Desktop\blender\packa
+ge-lock.json as the 
+root directory.
+ To silence this 
+warning, set `outputFil
+eTracingRoot` in your 
+Next.js config, or 
+consider removing one 
+of the lockfiles if 
+it's not needed.
+   See https://nextjs.o
+rg/docs/app/api-referen
+ce/config/next-config-j
+s/output#caveats for 
+more information.
+ Detected additional 
+lockfiles: 
+   * C:\Users\Arthur Pe
+rdigao\Desktop\blender\
+avatar-platform\package
+-lock.json
+
+   Ôû▓ Next.js 15.5.6
+   - Local:        http://localhost:3001
+   - Network:      http://192.168.1.42:3001
+   - Environments: .env
+
+ Ô£ô Starting...
+ Ô£ô Ready in 2.9s
+ Ôùï Compiling /middleware ...
+ Ô£ô Compiled /middleware in 925ms (243 modules)
+ Ôùï Compiling / ...
+ Ô£ô Compiled / in 5.7s (1642 modules)

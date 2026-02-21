@@ -1,0 +1,64 @@
+﻿
+> avatar-platform@0.1.0 lint
+> eslint
+
+
+C:\Users\Arthur Perdigao\Desktop\blender\avatar-platform\src\app\arena\pai-sho\page.tsx
+  598:52  warning  'gameKey' is defined but never used   @typescript-eslint/no-unused-vars
+  763:34  warning  'opponent' is defined but never used  @typescript-eslint/no-unused-vars
+
+C:\Users\Arthur Perdigao\Desktop\blender\avatar-platform\src\app\arena\trivia\page.tsx
+    9:49  warning  'useEffect' is defined but never used  @typescript-eslint/no-unused-vars
+  363:47  warning  '_answers' is defined but never used   @typescript-eslint/no-unused-vars
+
+C:\Users\Arthur Perdigao\Desktop\blender\avatar-platform\src\app\login\page.tsx
+  16:11  warning  'callbackUrl' is assigned a value but never used  @typescript-eslint/no-unused-vars
+
+C:\Users\Arthur Perdigao\Desktop\blender\avatar-platform\src\app\quiz\page.tsx
+  591:33  warning  'resetQuiz' is assigned a value but never used  @typescript-eslint/no-unused-vars
+
+C:\Users\Arthur Perdigao\Desktop\blender\avatar-platform\src\components\arena\bending\BendingFormDisplay.tsx
+  11:38  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  38:21  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  47:18  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  47:47  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\Arthur Perdigao\Desktop\blender\avatar-platform\src\components\arena\bending\RhythmTarget.tsx
+  21:38  warning  'svgPath' is defined but never used  @typescript-eslint/no-unused-vars
+
+C:\Users\Arthur Perdigao\Desktop\blender\avatar-platform\src\components\arena\trivia\TriviaQuestionDisplay.tsx
+  10:14  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  16:62  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\Arthur Perdigao\Desktop\blender\avatar-platform\src\hooks\usePaiShoStore.ts
+  10:10  warning  'isValidMove' is defined but never used  @typescript-eslint/no-unused-vars
+
+C:\Users\Arthur Perdigao\Desktop\blender\avatar-platform\src\lib\components\arena\paisho\PaiShoBoard.tsx
+  2:42  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\Arthur Perdigao\Desktop\blender\avatar-platform\src\lib\components\library\Timeline.tsx
+  45:29  warning  'index' is defined but never used  @typescript-eslint/no-unused-vars
+
+C:\Users\Arthur Perdigao\Desktop\blender\avatar-platform\src\lib\components\quiz\NarrativeStep.tsx
+  35:9   warning  'handleNarrativeContinue' is assigned a value but never used     @typescript-eslint/no-unused-vars
+  61:13  error    `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`  react/no-unescaped-entities
+  61:31  error    `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`  react/no-unescaped-entities
+
+C:\Users\Arthur Perdigao\Desktop\blender\avatar-platform\src\lib\components\quiz\StartScreen.tsx
+  10:10  warning  'useAudioStore' is defined but never used                        @typescript-eslint/no-unused-vars
+  46:9   error    `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`  react/no-unescaped-entities
+  47:29  error    `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`  react/no-unescaped-entities
+
+C:\Users\Arthur Perdigao\Desktop\blender\avatar-platform\src\lib\stores\useAudioStore.ts
+  26:5  error  'dynamicSounds' is never reassigned. Use 'const' instead  prefer-const
+
+C:\Users\Arthur Perdigao\Desktop\blender\avatar-platform\src\lib\utils\paiShoLogic.ts
+  24:3  warning  'boardState' is defined but never used  @typescript-eslint/no-unused-vars
+  25:3  warning  'tiles' is defined but never used       @typescript-eslint/no-unused-vars
+
+C:\Users\Arthur Perdigao\Desktop\blender\avatar-platform\src\lib\utils\quizLogic.ts
+  6:10  warning  'ARCHETYPE_DETAILS' is defined but never used  @typescript-eslint/no-unused-vars
+
+Ô£û 26 problems (12 errors, 14 warnings)
+  1 error and 0 warnings potentially fixable with the `--fix` option.
+

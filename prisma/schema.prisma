@@ -1,0 +1,26 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+model User {
+  id               String   @id @default(cuid())
+  nome             String
+  sobrenome        String
+  idade            Int
+  cidade           String
+  email            String   @unique
+  hashedPassword   String
+  elementoNato     String?
+  paiShoScore      Int      @default(0)
+  paiShoWinsEasy   Int      @default(0)
+  paiShoWinsMedium Int      @default(0)
+  paiShoWinsHard   Int      @default(0)
+  paiShoWinsMaster Int      @default(0)
+  pergaminhosScore Int      @default(0)
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+}
