@@ -414,7 +414,7 @@ const EPIC_MODULES: EpicModuleCard[] = [
   {
     title: 'O Chamado Espiritual', subtitle: 'Teste de Afinidade', element: 'none',
     description: 'Responda a perguntas comportamentais profundas para descobrir a qual das Quatro Nações o seu espírito realmente pertence.',
-    image: '/assets/hero_spirit_world_1771657132063.png',
+    image: '/assets/adventure_destiny_epic.png',
     href: '/quiz',
   },
   {
@@ -426,7 +426,7 @@ const EPIC_MODULES: EpicModuleCard[] = [
   {
     title: 'Pergaminhos Antigos', subtitle: 'Simulador Interativo', element: 'water',
     description: 'Um ambiente interativo de treino. Estude visualmente o fluxo da água, terra, fogo e ar praticando na tela as exatas posturas marciais das dobras.',
-    image: '/assets/nation_water_1771657146908.png',
+    image: '/assets/nation_water_epic.png',
     href: '/arena/bending-practice',
   },
   {
@@ -458,16 +458,23 @@ const EpicModulesSection = ({ setActiveElement }: any) => (
           initial={{ opacity: 0, y: 40 }} whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }} transition={{ delay: i * 0.15, duration: 0.8 }}>
           <Link href={mod.href} className="group block h-full">
-            <div className="relative flex flex-col h-full rounded shadow-[0_10px_30px_rgba(0,0,0,0.08)] bg-[#e6dec1]/60 backdrop-blur-sm transition-all duration-[0.8s] hover:shadow-[0_20px_40px_rgba(0,0,0,0.15)] hover:-translate-y-2 border border-[#c2b29a]/50 hover:bg-[#e6dec1]/90">
+            <div className="relative flex flex-col h-full rounded transition-all duration-[0.8s] hover:-translate-y-2"
+              style={{
+                backgroundColor: "#f4ebd8", // Base de pergaminho
+                backgroundImage: `url("data:image/svg+xml,%3Csvg width='100' height='100' viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100' height='100' filter='url(%23noise)' opacity='0.08'/%3E%3C/svg%3E")`,
+                border: `2px solid #d4c4a8`,
+                boxShadow: `0 20px 40px -10px rgba(0,0,0,0.2), inset 0 0 60px rgba(139, 69, 19, 0.05)`,
+                clipPath: 'polygon(2% 0%, 98% 0%, 100% 2%, 100% 98%, 98% 100%, 2% 100%, 0% 98%, 0% 2%)' // Bordas sutilmente cortadas nos cantos imitando papel desgastado
+              }}>
 
-              <div className="relative h-72 overflow-hidden border-b-2 border-[#c2b29a]/50">
-                <div className="absolute inset-0 bg-gradient-to-t from-[#e6dec1]/80 via-transparent to-transparent z-10 group-hover:from-transparent transition-all duration-700" />
-                <div className="absolute inset-0 bg-[#2c1e16]/30 group-hover:bg-transparent transition-colors duration-700 z-10" />
+              <div className="relative h-72 overflow-hidden border-b-2 border-[#d4c4a8]">
+                <div className="absolute inset-0 bg-gradient-to-t from-[#f4ebd8] via-transparent to-transparent z-10 group-hover:from-transparent transition-all duration-700" />
+                <div className="absolute inset-0 bg-[#2c1e16]/20 group-hover:bg-transparent transition-colors duration-700 z-10" />
                 {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src={mod.image} alt={mod.title} className="w-full h-full object-cover transform group-hover:scale-[1.03] transition-transform duration-[1.5s] ease-out filter mix-blend-multiply opacity-80 group-hover:opacity-100 grayscale-[20%]" />
+                <img src={mod.image} alt={mod.title} className="w-full h-full object-cover transform group-hover:scale-[1.03] transition-transform duration-[1.5s] ease-out filter mix-blend-multiply opacity-90 group-hover:opacity-100 grayscale-[10%]" />
               </div>
 
-              <div className="p-10 flex-1 flex flex-col justify-between transition-colors duration-500 relative z-20">
+              <div className="p-10 flex-1 flex flex-col justify-between transition-colors duration-500 relative z-20 hover:bg-[#fbf4e6]">
                 <div>
                   <div className="text-xs uppercase tracking-[0.4em] font-bold mb-3 text-[#991b1b]">
                     {mod.subtitle}
@@ -475,7 +482,7 @@ const EpicModulesSection = ({ setActiveElement }: any) => (
                   <h4 className="text-3xl font-bold mb-5 text-[#2c1e16] tracking-wide" style={{ fontFamily: 'var(--font-cinzel), serif' }}>
                     {mod.title}
                   </h4>
-                  <p className="text-base leading-relaxed text-[#5c4a3e]">
+                  <p className="text-base leading-relaxed text-[#5c4a3e] font-medium">
                     {mod.description}
                   </p>
                 </div>
