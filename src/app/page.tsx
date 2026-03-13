@@ -37,7 +37,7 @@ const ELEMENT_LIGHTS: Record<string, string> = {
 };
 
 const NATION_IMAGES = {
-  water: '/assets/nation_water_1771657146908.png',
+  water: '/assets/nation_water_epic.png',
   earth: '/assets/nation_earth_1771657163486.png',
   fire: '/assets/nation_fire_1771657181321.png',
   air: '/assets/nation_air_1771657196619.png',
@@ -426,7 +426,7 @@ const EPIC_MODULES: EpicModuleCard[] = [
   {
     title: 'Pergaminhos Antigos', subtitle: 'Simulador Interativo', element: 'water',
     description: 'Um ambiente interativo de treino. Estude visualmente o fluxo da água, terra, fogo e ar praticando na tela as exatas posturas marciais das dobras.',
-    image: '/assets/nation_water_epic.png',
+    image: '/assets/media__1771655221627.png',
     href: '/arena/bending-practice',
   },
   {
