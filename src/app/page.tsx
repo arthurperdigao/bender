@@ -7,7 +7,7 @@
  */
 'use client';
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { motion, useMotionValue, useSpring, useTransform, AnimatePresence } from 'framer-motion';
 import Link from 'next/link';
 import Navbar from '@/components/Navbar';
@@ -541,36 +541,45 @@ const EPIC_NATIONS: EpicNationData[] = [
 const EpicNationsSection = ({ setActiveElement }: any) => {
   const [selectedNation, setSelectedNation] = useState<EpicNationData | null>(null);
 
+  // Fecha modal com a tecla ESC
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setSelectedNation(null);
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
+
   return (
     <>
-      <section className="relative w-full overflow-hidden bg-[#161a25]">
+      <section className="relative w-full overflow-hidden" style={{ backgroundColor: '#e6dec1' }}>
         <div className="w-full grid mx-auto grid-cols-1 md:grid-cols-4 h-full md:h-[700px]">
           {EPIC_NATIONS.map((nation, i) => (
-            <motion.div key={nation.name} className="relative group overflow-hidden h-[400px] md:h-full cursor-pointer border-r border-[#ffffff05] last:border-0"
+            <motion.div key={nation.name} className="relative group overflow-hidden h-[400px] md:h-full cursor-pointer border-r border-[#c2b29a]/30 last:border-0"
               onHoverStart={() => setActiveElement(nation.id)}
               onHoverEnd={() => setActiveElement('none')}
               onClick={() => setSelectedNation(nation)}
               initial={{ opacity: 0 }} whileInView={{ opacity: 1 }} viewport={{ once: true }} transition={{ delay: i * 0.1, duration: 1 }}>
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img src={nation.image} alt={nation.name}
-                className="absolute inset-0 w-full h-full object-cover transform scale-[1.05] group-hover:scale-100 transition-transform duration-[2s] ease-out brightness-50 contrast-[1.1] grayscale-[20%] group-hover:grayscale-0 group-hover:brightness-90" />
+                className="absolute inset-0 w-full h-full object-cover transform scale-[1.05] group-hover:scale-100 transition-transform duration-[2s] ease-out brightness-75 contrast-[1.05] sepia-[0.3] group-hover:sepia-0 group-hover:brightness-100" />
 
-              {/* Overlays cinematográficos Dark Blue */}
-              <div className="absolute inset-0 bg-[#0d0f16]/60 group-hover:bg-[#0d0f16]/20 transition-colors duration-[1s]" />
-              <div className="absolute inset-0 bg-gradient-to-t from-[#0d0f16] via-transparent to-transparent opacity-90 group-hover:opacity-60 transition-opacity duration-1000" />
+              {/* Overlays cinematográficos Parchment */}
+              <div className="absolute inset-0 bg-[#e6dec1]/20 group-hover:bg-[#e6dec1]/0 transition-colors duration-[1s]" />
+              <div className="absolute inset-0 bg-gradient-to-t from-[#2c1e16] via-transparent to-transparent opacity-90 group-hover:opacity-60 transition-opacity duration-1000" />
 
               <div className="absolute inset-0 flex flex-col items-center justify-center p-8 text-center text-white opacity-90 group-hover:opacity-100 transition-opacity duration-500">
                 <div className="w-[1px] h-16 bg-[#dcb670] mb-8 transform scale-y-0 group-hover:scale-y-100 transition-transform duration-700 origin-bottom shadow-[0_0_10px_rgba(220,182,112,0.8)]" />
 
-                <h4 className="text-3xl lg:text-4xl font-black tracking-[0.2em] mb-4 uppercase transition-transform duration-700 group-hover:-translate-y-3"
-                  style={{ fontFamily: 'var(--font-cinzel), serif', textShadow: '0 4px 20px rgba(0,0,0,1)' }}>
+                <h4 className="text-3xl lg:text-4xl font-bold tracking-[0.2em] mb-4 uppercase transition-transform duration-700 group-hover:-translate-y-3"
+                  style={{ fontFamily: 'var(--font-cinzel), serif', textShadow: '0 4px 15px rgba(0,0,0,0.8)' }}>
                   {nation.name}
                 </h4>
 
-                <p className="text-lg italic max-w-[220px] transform translate-y-6 opacity-0 group-hover:translate-y-0 group-hover:opacity-100 transition-all duration-[0.8s] delay-100 text-gray-300 drop-shadow-[0_2px_8px_rgba(0,0,0,1)] font-lora">
+                <p className="text-lg italic max-w-[220px] transform translate-y-6 opacity-0 group-hover:translate-y-0 group-hover:opacity-100 transition-all duration-[0.8s] delay-100 text-gray-200 drop-shadow-[0_2px_5px_rgba(0,0,0,0.8)] font-lora">
                   {nation.philosophy}
                   <br />
-                  <span className="text-xs uppercase tracking-[0.4em] font-bold text-[#dcb670] not-italic mt-6 block opacity-0 group-hover:opacity-100 transition-opacity duration-1000 delay-300">Explorar Lore Expandida</span>
+                  <span className="text-xs uppercase tracking-[0.4em] font-bold text-[#dcb670] not-italic mt-6 block opacity-0 group-hover:opacity-100 transition-opacity duration-1000 delay-300">Explorar Livros</span>
                 </p>
               </div>
             </motion.div>
@@ -578,80 +587,110 @@ const EpicNationsSection = ({ setActiveElement }: any) => {
         </div>
       </section>
 
-      {/* MODAL DETALHADO DA NAÇÃO LORE (HQs e Série) */}
+      {/* MODAL DETALHADO DA NAÇÃO LORE (ESTILO PERGAMINHO E HQs) */}
       <AnimatePresence>
         {selectedNation && (
           <motion.div
-            className="fixed inset-0 z-50 flex items-center justify-center p-4 md:p-12 bg-[#0d0f16]/90 backdrop-blur-md"
+            className="fixed inset-0 z-50 flex items-center justify-center p-4 md:p-8"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            transition={{ duration: 0.5 }}
+            transition={{ duration: 0.4 }}
             onClick={() => setSelectedNation(null)}
           >
+            {/* Backdrop com desfoque e uma cor de textura leve */}
+            <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
+
             <motion.div
-              className="relative w-full max-w-4xl max-h-[90vh] overflow-y-auto bg-[#161a25] border border-white/10 rounded-xl shadow-[0_0_80px_rgba(0,0,0,0.8)] custom-scrollbar"
-              initial={{ y: 50, scale: 0.95, opacity: 0 }}
+              className="relative w-full max-w-5xl max-h-[92vh] flex flex-col overflow-hidden shadow-[0_20px_60px_rgba(0,0,0,0.5)] border border-[#c2b29a]/40 rounded"
+              style={{
+                backgroundColor: '#f4ebd8',
+                backgroundImage: 'url("https://www.transparenttextures.com/patterns/aged-paper.png")',
+              }}
+              initial={{ y: 30, scale: 0.98, opacity: 0 }}
               animate={{ y: 0, scale: 1, opacity: 1 }}
-              exit={{ y: 20, scale: 0.95, opacity: 0 }}
-              transition={{ duration: 0.5, delay: 0.1 }}
+              exit={{ y: 20, scale: 0.98, opacity: 0 }}
+              transition={{ duration: 0.4, ease: "easeOut" }}
               onClick={(e) => e.stopPropagation()}
             >
-              {/* Header Imersivo do Modal */}
-              <div className="relative h-64 md:h-80 w-full overflow-hidden shrink-0">
-                <motion.img
-                  src={selectedNation.image}
-                  alt={selectedNation.name}
-                  className="w-full h-full object-cover brightness-75 scale-105"
-                  initial={{ y: -20 }}
-                  animate={{ y: 0 }}
-                  transition={{ duration: 1.5, ease: "easeOut" }}
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-[#161a25] via-[#161a25]/40 to-transparent" />
-                <button
-                  className="absolute top-6 right-6 text-white/50 hover:text-[#dcb670] transform hover:scale-110 transition-all z-10"
-                  onClick={() => setSelectedNation(null)}
-                >
-                  <span className="text-4xl leading-none font-thin">&times;</span>
-                </button>
-                <div className="absolute bottom-6 left-8 md:left-12">
-                  <h3 className="text-4xl md:text-5xl tracking-[0.1em] font-bold text-white mb-2 uppercase" style={{ fontFamily: 'var(--font-cinzel), serif', textShadow: '0 4px 20px rgba(0,0,0,1)' }}>
-                    {selectedNation.name}
-                  </h3>
-                  <div className="text-[#dcb670] text-sm uppercase tracking-[0.4em] font-bold">
-                    Arquivos Secretos ✦ Base Original & HQs
+              <div className="overflow-y-auto custom-scrollbar flex-1">
+                {/* Header Imersivo do Modal - Reduzido o topo da imagem para não cobrir a imensidão */}
+                <div className="relative h-48 md:h-64 shrink-0 border-b-2 border-[#c2b29a]/50">
+                  <div className="absolute inset-0 bg-[#2c1e16]">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      src={selectedNation.image}
+                      alt={selectedNation.name}
+                      className="w-full h-full object-cover opacity-80 mix-blend-overlay grayscale-[30%] object-top"
+                    />
+                  </div>
+                  <div className="absolute inset-0 bg-gradient-to-t from-[#f4ebd8] via-[#f4ebd8]/40 to-transparent" />
+                  
+                  {/* Título sobre a imagem */}
+                  <div className="absolute bottom-0 w-full text-center pb-8 pt-12 bg-gradient-to-t from-[#f4ebd8] to-transparent">
+                    <h3 className="text-4xl md:text-5xl font-bold uppercase tracking-[0.2em] text-[#2c1e16]"
+                      style={{ fontFamily: 'var(--font-cinzel), serif' }}>
+                      {selectedNation.name}
+                    </h3>
+                    <div className="w-24 h-[2px] bg-[#dcb670] mx-auto mt-4" />
+                  </div>
+                </div>
+
+                {/* Conteúdo do Pergaminho */}
+                <div className="p-8 md:p-12 pb-24 text-[#5c4a3e]">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
+                    
+                    {/* Coluna 1: Cultura & Filosofia */}
+                    <div>
+                      <h4 className="flex items-center gap-3 text-lg tracking-[0.3em] uppercase font-bold text-[#991b1b] mb-4" style={{ fontFamily: 'var(--font-cinzel), serif' }}>
+                        <span className="w-8 h-[1px] bg-[#991b1b]" />
+                        Cultura & Etimologia
+                      </h4>
+                      <div className="text-[1.05rem] leading-loose whitespace-pre-line text-justify font-serif" style={{ color: '#4a3d34' }}>
+                        {selectedNation.lore.culture}
+                      </div>
+                    </div>
+
+                    {/* Coluna 2: A Dobra, Origem Espiritual e Conflitos Históricos */}
+                    <div className="space-y-12">
+                      <div>
+                        <h4 className="flex items-center gap-3 text-lg tracking-[0.3em] uppercase font-bold text-[#991b1b] mb-4" style={{ fontFamily: 'var(--font-cinzel), serif' }}>
+                          <span className="w-8 h-[1px] bg-[#991b1b]" />
+                          O Caminho da Dobra
+                        </h4>
+                        <div className="text-[1.05rem] leading-loose whitespace-pre-line text-justify font-serif" style={{ color: '#4a3d34' }}>
+                          {selectedNation.lore.bending}
+                        </div>
+                      </div>
+
+                      <div className="bg-[#e6dec1]/40 border border-[#c2b29a]/50 p-6 md:p-8 rounded-sm shadow-inner relative">
+                        <div className="absolute -top-3 left-8 bg-[#f4ebd8] px-2 text-[#991b1b] font-bold tracking-widest text-xs uppercase">
+                          Registros Canônicos - Quadrinhos
+                        </div>
+                        <h4 className="text-lg tracking-[0.2em] uppercase font-bold text-[#2c1e16] mb-3" style={{ fontFamily: 'var(--font-cinzel), serif' }}>
+                          Evolução Pós-Guerra
+                        </h4>
+                        <div className="text-base leading-relaxed whitespace-pre-line text-justify italic font-serif" style={{ color: '#4a3d34' }}>
+                          {selectedNation.lore.comics}
+                        </div>
+                      </div>
+                    </div>
+
                   </div>
                 </div>
               </div>
 
-              {/* Corpo de Texto das Lores */}
-              <div className="p-8 md:p-12 space-y-12 relative text-gray-300">
-                {/* Linha Fina Direcional Decorativa */}
-                <div className="absolute top-12 bottom-12 left-8 md:left-12 w-[1px] bg-gradient-to-b from-[#dcb670]/50 via-white/10 to-transparent" />
-
-                <div className="relative pl-8 md:pl-10">
-                  <div className="absolute left-[-4px] top-1.5 w-2 h-2 rounded-full bg-[#dcb670] shadow-[0_0_10px_rgba(220,182,112,0.8)]" />
-                  <h5 className="text-xs uppercase tracking-[0.3em] text-[#dcb670] mb-3 font-bold">Cultura e Sociedade</h5>
-                  <p className="text-base md:text-lg leading-relaxed font-lora opacity-90 whitespace-pre-line">{selectedNation.lore.culture}</p>
-                </div>
-
-                <div className="relative pl-8 md:pl-10">
-                  <div className="absolute left-[-4px] top-1.5 w-2 h-2 rounded-full bg-[#dcb670] shadow-[0_0_10px_rgba(220,182,112,0.8)]" />
-                  <h5 className="text-xs uppercase tracking-[0.3em] text-[#dcb670] mb-3 font-bold">Técnica e Filosofia (O Domínio)</h5>
-                  <p className="text-base md:text-lg leading-relaxed font-lora opacity-90 whitespace-pre-line">
-                    <span className="italic block mb-6 px-4 border-l-2 border-[#dcb670]/40 text-[#dcb670]/80">&quot;{selectedNation.philosophy}&quot;</span>
-                    {selectedNation.lore.bending}
-                  </p>
-                </div>
-
-                <div className="relative pl-8 md:pl-10">
-                  <div className="absolute left-[-4px] top-1.5 w-2 h-2 rounded-full bg-[#dcb670] shadow-[0_0_10px_rgba(220,182,112,0.8)]" />
-                  <h5 className="text-xs uppercase tracking-[0.3em] text-[#dcb670] mb-3 font-bold">Eventos Canônicos Inéditos (HQs Oficiais e Korra)</h5>
-                  <div className="p-6 md:p-8 bg-[#1d2232]/50 border border-white/5 rounded-lg shadow-inner">
-                    <p className="text-base md:text-lg leading-relaxed font-lora opacity-90 whitespace-pre-line text-[#e2d5b8]">{selectedNation.lore.comics}</p>
-                  </div>
-                </div>
-              </div>
+              {/* Botão Flutuante de Fechar Estilo Pergaminho (Selo) */}
+              <button
+                onClick={() => setSelectedNation(null)}
+                className="absolute top-6 right-6 w-12 h-12 bg-[#2c1e16] text-[#e6dec1] flex items-center justify-center rounded-full hover:bg-[#991b1b] hover:text-white hover:scale-110 transition-all border-2 border-[#e6dec1] shadow-[0_4px_10px_rgba(0,0,0,0.3)] z-50 group"
+                aria-label="Ignorar Período Histórico"
+              >
+                <svg className="w-5 h-5 transform group-hover:rotate-90 transition-transform duration-300" 
+                     fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path>
+                </svg>
+              </button>
             </motion.div>
           </motion.div>
         )}
