@@ -302,7 +302,11 @@ const EpicHeroSection = ({ activeElement, setActiveElement, mouseX, mouseY }: an
   const bgY = useTransform(mouseY, [0, typeof window !== 'undefined' ? window.innerHeight : 1000], [-15, 15]);
 
   return (
-    <section className="relative flex min-h-screen flex-col items-center justify-center p-8 text-center overflow-hidden bg-[#161a25]">
+    <section className="relative flex min-h-screen flex-col items-center justify-center p-8 text-center overflow-hidden"
+      style={{
+        backgroundColor: '#f4ebd8',
+        backgroundImage: 'url("https://www.transparenttextures.com/patterns/aged-paper.png")'
+      }}>
 
       {/* 🌟 FUNDO CINEMATOGRÁFICO EM LOOP (ESTILO AVATAR STUDIOS) 🌟 */}
       <motion.div
@@ -313,10 +317,10 @@ const EpicHeroSection = ({ activeElement, setActiveElement, mouseX, mouseY }: an
         <img
           src="/assets/hero_spirit_world_1771657132063.png"
           alt="Avatar Epic Scenery"
-          className="w-full h-full object-cover opacity-60"
+          className="w-full h-full object-cover opacity-[0.14] mix-blend-multiply sepia-[0.3] contrast-125 saturate-50 blur-[2px]"
         />
         {/* Overlay Azul Marinho Profundo exato do Avatar Studios -> rgb(36, 42, 60) misturado com preto */}
-        <div className="absolute inset-0 bg-gradient-to-t from-[#161a25] via-[#242a3c]/70 to-[#161a25]/90" />
+        <div className="absolute inset-0 bg-gradient-to-t from-[#f4ebd8] via-transparent to-[#f4ebd8]/40" />
       </motion.div>
 
       {/* Partículas Elementais sutis no Background */}
@@ -326,36 +330,36 @@ const EpicHeroSection = ({ activeElement, setActiveElement, mouseX, mouseY }: an
       <motion.div className="relative z-10 flex flex-col items-center justify-center mt-12"
         initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 1.5 }}>
 
-        <h2 className="mb-2 text-sm md:text-md uppercase tracking-[0.6em] font-bold text-gray-400"
+        <h2 className="mb-2 text-sm md:text-md uppercase tracking-[0.6em] font-bold text-[#4a3d34]"
           style={{ fontFamily: 'var(--font-cinzel), serif' }}>
-          Nickelodeon
+          Jornada Literária
         </h2>
 
-        <h1 className="mb-8 text-6xl md:text-8xl font-black tracking-tight text-white uppercase"
+        <h1 className="text-6xl md:text-8xl font-black tracking-tight text-[#2c1e16] uppercase leading-none mt-2"
           style={{
             fontFamily: 'var(--font-cinzel), serif',
-            textShadow: '0 4px 30px rgba(0,0,0,0.9), 0 2px 10px rgba(0,0,0,0.8)',
+            textShadow: '0 4px 15px rgba(0,0,0,0.1)',
             letterSpacing: '0.05em'
           }}>
           Avatar <br />
-          <span className="text-4xl md:text-6xl text-[#dcb670] tracking-widest block mt-4" style={{ textShadow: '0 4px 15px rgba(220, 182, 112, 0.4)' }}>
-            Studios
+          <span className="text-3xl md:text-5xl text-[#991b1b] tracking-widest block mt-4" style={{ textShadow: '0 4px 10px rgba(153, 27, 27, 0.2)' }}>
+            Quatro Nações
           </span>
         </h1>
 
         {/* Os 4 Elementos Alinhados Horizontalmente (Estilo site oficial) */}
-        <div className="flex items-center justify-center gap-8 md:gap-16 mb-16 mt-4">
-          <div className="text-4xl hover:scale-125 transition-transform duration-300 cursor-pointer drop-shadow-[0_0_15px_rgba(90,158,196,0.8)] filter grayscale hover:grayscale-0">🌊</div>
-          <div className="text-4xl hover:scale-125 transition-transform duration-300 cursor-pointer drop-shadow-[0_0_15px_rgba(160,184,76,0.8)] filter grayscale hover:grayscale-0">⛰️</div>
-          <div className="text-4xl hover:scale-125 transition-transform duration-300 cursor-pointer drop-shadow-[0_0_15px_rgba(255,106,66,0.8)] filter grayscale hover:grayscale-0">🔥</div>
-          <div className="text-4xl hover:scale-125 transition-transform duration-300 cursor-pointer drop-shadow-[0_0_15px_rgba(242,197,106,0.8)] filter grayscale hover:grayscale-0">🌪️</div>
+        <div className="flex items-center justify-center gap-8 md:gap-16 mb-16 mt-8">
+          <div className="flex items-center justify-center w-14 h-14 rounded-full border-2 border-[#5a9ec4] bg-[#5a9ec4]/10 text-3xl hover:scale-125 transition-transform duration-300 cursor-pointer drop-shadow-[0_0_15px_rgba(90,158,196,0.3)] filter grayscale-[20%] hover:grayscale-0">🌊</div>
+          <div className="flex items-center justify-center w-14 h-14 rounded-full border-2 border-[#8fa04a] bg-[#8fa04a]/10 text-3xl hover:scale-125 transition-transform duration-300 cursor-pointer drop-shadow-[0_0_15px_rgba(160,184,76,0.3)] filter grayscale-[20%] hover:grayscale-0">⛰️</div>
+          <div className="flex items-center justify-center w-14 h-14 rounded-full border-2 border-[#cc4a2e] bg-[#cc4a2e]/10 text-3xl hover:scale-125 transition-transform duration-300 cursor-pointer drop-shadow-[0_0_15px_rgba(255,106,66,0.3)] filter grayscale-[20%] hover:grayscale-0">🔥</div>
+          <div className="flex items-center justify-center w-14 h-14 rounded-full border-2 border-[#81a1c1] bg-[#81a1c1]/10 text-3xl hover:scale-125 transition-transform duration-300 cursor-pointer drop-shadow-[0_0_15px_rgba(242,197,106,0.3)] filter grayscale-[20%] hover:grayscale-0">🫧</div>
         </div>
 
         {/* CONDIÇÃO: Logado mostra Dashboard / Não logado mostra Botão */}
         {status === 'loading' ? (
-          <div className="h-40 w-full max-w-2xl mx-auto rounded-xl bg-white/5 animate-pulse mt-8" />
+          <div className="h-40 w-full max-w-2xl mx-auto rounded-xl bg-[#c2b29a]/20 border border-[#c2b29a]/40 animate-pulse mt-8" />
         ) : session?.user ? (
-          <div className="w-full mt-4 mb-16 relative z-20">
+          <div className="w-full mt-4 mb-16 relative z-20 dashboard-parchment-theme">
             <UserDashboardWidget />
           </div>
         ) : (
@@ -365,9 +369,9 @@ const EpicHeroSection = ({ activeElement, setActiveElement, mouseX, mouseY }: an
               onClick={scrollToQuiz}
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
-              className="relative px-12 py-5 text-sm md:text-lg font-bold tracking-[0.2em] uppercase transition-all duration-300 text-[#161a25] shadow-[0_0_40px_rgba(220,182,112,0.3)] hover:shadow-[0_0_60px_rgba(220,182,112,0.6)]"
+              className="relative px-12 py-5 text-sm md:text-lg font-bold tracking-[0.2em] uppercase transition-all duration-300 text-[#f4ebd8] hover:text-white shadow-[0_4px_15px_rgba(44,30,22,0.4)] hover:shadow-[0_8px_25px_rgba(44,30,22,0.6)]"
               style={{
-                backgroundColor: '#dcb670', // Cor de pergaminho/dourado
+                backgroundColor: '#2c1e16', // Cor de nanquim
                 fontFamily: 'var(--font-cinzel), serif',
                 clipPath: 'polygon(5% 0%, 95% 0%, 100% 50%, 95% 100%, 5% 100%, 0% 50%)', // Simula borda decorativa asiática
                 border: 'none'
@@ -376,7 +380,7 @@ const EpicHeroSection = ({ activeElement, setActiveElement, mouseX, mouseY }: an
             </motion.button>
 
             {/* Sub Botão "Explore More" estético */}
-            <div className="mt-8 text-gray-400 text-xs tracking-widest uppercase mb-16 cursor-pointer hover:text-white transition-colors" onClick={scrollToModules}>
+            <div className="mt-8 text-[#5c4a3e] text-xs tracking-widest uppercase mb-16 cursor-pointer hover:text-[#991b1b] font-bold transition-colors" onClick={scrollToModules}>
               Explorar o Universo
             </div>
           </>
@@ -386,11 +390,11 @@ const EpicHeroSection = ({ activeElement, setActiveElement, mouseX, mouseY }: an
 
       {/* Indicador de Scroll no canto inferior esquerdo */}
       <div className="absolute bottom-8 left-8 flex flex-col items-center gap-2 opacity-60">
-        <span className="text-[10px] uppercase tracking-[0.3em] font-bold text-white transform -rotate-90 origin-bottom mb-8">Scroll</span>
+        <span className="text-[10px] uppercase tracking-[0.3em] font-bold text-[#2c1e16] transform -rotate-90 origin-bottom mb-8">Navegar</span>
         <motion.div
           animate={{ y: [0, 10, 0] }}
           transition={{ duration: 1.5, repeat: Infinity, ease: "easeInOut" }}
-          className="w-px h-12 bg-white"
+          className="w-px h-12 bg-[#2c1e16]"
         />
       </div>
 
@@ -435,17 +439,15 @@ const EPIC_MODULES: EpicModuleCard[] = [
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const EpicModulesSection = ({ setActiveElement }: any) => (
-  <section id="modules" className="relative py-32 px-6 md:px-12 bg-[#161a25]">
-    {/* Fundo Atmosférico Dark */}
-    <div className="absolute inset-0 bg-gradient-to-b from-[#161a25] via-[#1d2232] to-[#161a25] opacity-50 z-0" />
+  <section id="modules" className="relative py-32 px-6 md:px-12 bg-transparent">
 
     <motion.div className="text-center mb-24 relative z-10"
       initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.8 }}>
-      <h2 className="text-sm uppercase tracking-[0.6em] mb-4 text-[#dcb670] font-bold" style={{ fontFamily: 'var(--font-cinzel), serif', textShadow: '0 0 10px rgba(220,182,112,0.3)' }}>Os Arquivos Secretos</h2>
-      <h3 className="text-4xl md:text-5xl font-black text-white uppercase tracking-widest" style={{ fontFamily: 'var(--font-cinzel), serif' }}>
+      <h2 className="text-sm uppercase tracking-[0.6em] mb-4 text-[#991b1b] font-bold" style={{ fontFamily: 'var(--font-cinzel), serif' }}>Os Arquivos Secretos</h2>
+      <h3 className="text-4xl md:text-5xl font-black text-[#2c1e16] uppercase tracking-widest" style={{ fontFamily: 'var(--font-cinzel), serif' }}>
         Jornada do Conhecimento
       </h3>
-      <div className="mx-auto w-16 h-[2px] mt-8 bg-[#dcb670] shadow-[0_0_15px_rgba(220,182,112,0.5)]"></div>
+      <div className="mx-auto w-16 h-[2px] mt-8 bg-[#991b1b]"></div>
     </motion.div>
 
     <div className="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-16 relative z-10">
@@ -456,28 +458,28 @@ const EpicModulesSection = ({ setActiveElement }: any) => (
           initial={{ opacity: 0, y: 40 }} whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }} transition={{ delay: i * 0.15, duration: 0.8 }}>
           <Link href={mod.href} className="group block h-full">
-            <div className="relative flex flex-col h-full rounded-xl overflow-hidden bg-[#1d2232]/80 backdrop-blur-sm transition-all duration-[0.8s] hover:shadow-[0_20px_40px_rgba(0,0,0,0.5)] hover:-translate-y-2 border border-white/5 hover:border-[#dcb670]/30 group-hover:bg-[#242a3c]">
+            <div className="relative flex flex-col h-full rounded shadow-[0_10px_30px_rgba(0,0,0,0.08)] bg-[#e6dec1]/60 backdrop-blur-sm transition-all duration-[0.8s] hover:shadow-[0_20px_40px_rgba(0,0,0,0.15)] hover:-translate-y-2 border border-[#c2b29a]/50 hover:bg-[#e6dec1]/90">
 
-              <div className="relative h-72 overflow-hidden">
-                <div className="absolute inset-0 bg-gradient-to-t from-[#1d2232] via-transparent to-transparent z-10 group-hover:from-transparent transition-all duration-700" />
-                <div className="absolute inset-0 bg-[#000]/40 group-hover:bg-transparent transition-colors duration-700 z-10" />
+              <div className="relative h-72 overflow-hidden border-b-2 border-[#c2b29a]/50">
+                <div className="absolute inset-0 bg-gradient-to-t from-[#e6dec1]/80 via-transparent to-transparent z-10 group-hover:from-transparent transition-all duration-700" />
+                <div className="absolute inset-0 bg-[#2c1e16]/30 group-hover:bg-transparent transition-colors duration-700 z-10" />
                 {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src={mod.image} alt={mod.title} className="w-full h-full object-cover transform group-hover:scale-[1.03] transition-transform duration-[1.5s] ease-out filter brightness-75 group-hover:brightness-100" />
+                <img src={mod.image} alt={mod.title} className="w-full h-full object-cover transform group-hover:scale-[1.03] transition-transform duration-[1.5s] ease-out filter mix-blend-multiply opacity-80 group-hover:opacity-100 grayscale-[20%]" />
               </div>
 
-              <div className="p-10 flex-1 flex flex-col justify-between border-t border-white/5 transition-colors duration-500 relative z-20 -mt-10 bg-gradient-to-b from-transparent to-[#1d2232] group-hover:to-[#242a3c]">
+              <div className="p-10 flex-1 flex flex-col justify-between transition-colors duration-500 relative z-20">
                 <div>
-                  <div className="text-xs uppercase tracking-[0.4em] font-bold mb-3 text-[#dcb670] group-hover:text-white transition-colors duration-500">
+                  <div className="text-xs uppercase tracking-[0.4em] font-bold mb-3 text-[#991b1b]">
                     {mod.subtitle}
                   </div>
-                  <h4 className="text-3xl font-bold mb-5 text-white tracking-wide" style={{ fontFamily: 'var(--font-cinzel), serif' }}>
+                  <h4 className="text-3xl font-bold mb-5 text-[#2c1e16] tracking-wide" style={{ fontFamily: 'var(--font-cinzel), serif' }}>
                     {mod.title}
                   </h4>
-                  <p className="text-base leading-relaxed text-gray-400">
+                  <p className="text-base leading-relaxed text-[#5c4a3e]">
                     {mod.description}
                   </p>
                 </div>
-                <div className="mt-8 flex items-center gap-2 text-sm uppercase tracking-widest text-[#dcb670] font-bold group-hover:text-white transition-colors duration-300">
+                <div className="mt-8 flex items-center gap-2 text-sm uppercase tracking-widest text-[#991b1b] font-bold transition-colors duration-300">
                   <span className="transform group-hover:translate-x-2 transition-transform duration-300">Explorar Módulo</span>
                   <span className="transform group-hover:translate-x-4 transition-transform duration-300">→</span>
                 </div>
@@ -703,30 +705,29 @@ const EpicNationsSection = ({ setActiveElement }: any) => {
 // FOOTER — Pergaminho Final
 // ═══════════════════════════════════════════════════════════
 const EpicFooter = () => (
-  <footer className="relative py-24 px-6 text-center overflow-hidden bg-[#0d0f16] border-t border-white/5">
+  <footer className="relative py-24 px-6 text-center overflow-hidden bg-[#e6dec1] border-t border-[#c2b29a]/50">
     {/* Decoração sutil de fundo */}
     <div className="absolute inset-0 flex justify-center items-center opacity-5 pointer-events-none">
-      <span className="text-[300px]" style={{ fontFamily: 'var(--font-cinzel), serif' }}>A</span>
+      <span className="text-[300px] text-[#2c1e16]" style={{ fontFamily: 'var(--font-cinzel), serif' }}>A</span>
     </div>
 
-    <motion.div className="mb-12 w-16 h-16 mx-auto opacity-40 hover:opacity-100 transition-opacity duration-500 cursor-pointer"
+    <motion.div className="mb-12 w-16 h-16 mx-auto opacity-70 hover:opacity-100 transition-opacity duration-500 cursor-pointer"
       animate={{ rotate: 360 }} transition={{ duration: 60, repeat: Infinity, ease: 'linear' }}>
-      {/* Usando TuiAndLa com cor branca super discreta */}
       <TuiAndLaInk size={64} activeElement="water" />
     </motion.div>
 
-    <h2 className="text-2xl md:text-3xl font-black mb-8 text-white uppercase tracking-widest" style={{ fontFamily: 'var(--font-cinzel), serif' }}>
+    <h2 className="text-2xl md:text-3xl font-black mb-8 text-[#2c1e16] uppercase tracking-widest" style={{ fontFamily: 'var(--font-cinzel), serif' }}>
       &quot;A sabedoria vem não do poder,<br className="hidden md:block" /> mas da compreensão.&quot;
     </h2>
 
-    <div className="w-8 h-[2px] mx-auto bg-[#dcb670] mb-8 shadow-[0_0_10px_rgba(220,182,112,0.6)]"></div>
+    <div className="w-8 h-[2px] mx-auto bg-[#991b1b] mb-8"></div>
 
-    <div className="text-xs md:text-sm space-y-3 opacity-50 text-gray-300 uppercase tracking-[0.2em]">
+    <div className="text-xs md:text-sm space-y-3 text-[#5c4a3e] uppercase tracking-[0.2em] font-bold">
       <p>Um projeto dedicado ao Universo das Quatro Nações.</p>
       <p>Bending The Elements Since 2005.</p>
     </div>
 
-    <div className="mt-16 text-[10px] text-gray-600 tracking-widest uppercase">
+    <div className="mt-16 text-[10px] text-[#4a3d34] tracking-widest uppercase">
       © {new Date().getFullYear()} Avatar V-Platform. All Rights Reserved.
     </div>
   </footer>
@@ -750,7 +751,9 @@ export default function EpicHomePage() {
   };
 
   return (
-    <main className="min-h-screen relative overflow-x-hidden font-lora" onMouseMove={handleMouseMove}>
+    <main className="min-h-screen relative overflow-x-hidden font-lora bg-[#f4ebd8]" 
+      style={{ backgroundImage: 'url("https://www.transparenttextures.com/patterns/aged-paper.png")' }} 
+      onMouseMove={handleMouseMove}>
       <Navbar />
       <EpicHeroSection activeElement={activeElement} setActiveElement={setActiveElement} mouseX={smoothX} mouseY={smoothY} />
       <EpicModulesSection setActiveElement={setActiveElement} />
