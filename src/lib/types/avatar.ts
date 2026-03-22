@@ -7,26 +7,34 @@
 // ─── Resultados do Quiz ───
 // Cada resultado representa um arquétipo único no universo Avatar
 export type ResultID =
-  // Dobradores de Água
-  | 'WATER_HEALER'          // Curandeiro — foco em cura espiritual
-  | 'WATER_WARRIOR'         // Guerreiro do Gelo — combate e resiliência
-  | 'WATER_BLOODBENDER'     // Mestre da Vontade — controle absoluto (raro)
-  // Dobradores de Terra
-  | 'EARTH_GUARDIAN'        // Guardião de Ba Sing Se — estabilidade
-  | 'EARTH_METALBENDER'     // Dobrador de Metal — inovação (Zaofu)
-  | 'EARTH_LAVABENDER'      // Dobrador de Lava — poder bruto e adaptação
-  // Dobradores de Fogo
-  | 'FIRE_LIGHTNING'        // Relâmpago — precisão e controle frio
-  | 'FIRE_SUN_WARRIOR'      // Guerreiro do Sol — fogo como vida, não destruição
-  | 'FIRE_COMBUSTION'       // Combustão — poder concentrado e destrutivo
-  // Dobradores de Ar
-  | 'AIR_NOMAD'             // Nômade Espiritual — desapego e liberdade
-  | 'AIR_ACOLYTE'           // Acólito — reconstrução e comunidade
-  // Não-Dobradores (igualmente épicos)
-  | 'NON_BENDER_LEADER'     // Líder/Estrategista — como Sokka
+  // ── ÁGUA ──
+  | 'WATER_HEALER'          // Curandeiro — técnica sagrada de cura
+  | 'WATER_BLOODBENDER'     // Dobra de Sangue — sub-dobra rara e proibida
+  | 'WATER_PLANTBENDER'     // Dobra de Planta — controla a água nas plantas
+  | 'WATER_MASTER'          // Mestre das Marés — dominador puro sem sub-dobra
+  | 'WATER_WARRIOR'         // Guerreiro da Tribo da Água — combate físico e dobra
+  // ── TERRA ──
+  | 'EARTH_METALBENDER'     // Dobra de Metal — sub-dobra criada por Toph
+  | 'EARTH_LAVABENDER'      // Dobra de Lava — sub-dobra de fogo dentro da terra
+  | 'EARTH_SANDBENDER'      // Dobra de Areia — estilo fluido e raro
+  | 'EARTH_MASTER'          // Pilar Inabalável — dominador puro sem sub-dobra
+  | 'EARTH_GUARDIAN'        // Guardião do Reino da Terra — focado em defesa
+  // ── FOGO ──
+  | 'FIRE_LIGHTNING'        // Dobra de Relâmpago — sub-dobra de precisão fria
+  | 'FIRE_COMBUSTION'       // Dobra de Combustão — sub-dobra mental e destrutiva
+  | 'FIRE_SUN_WARRIOR'      // Corrente do Sol — filosofia ancestral do fogo como vida
+  | 'FIRE_MASTER'           // Chama Eterna — dominador puro sem sub-dobra
+  // ── AR ──
+  | 'AIR_FLIGHT'            // Voo Espiritual — conquista rarísima (como Zaheer)
+  | 'AIR_SPIRITUAL'         // Projeção Espiritual — como Jinora, conexão com espíritos
+  | 'AIR_NOMAD'             // Nômade Espiritual — caminho tradicional de desapego
+  | 'AIR_MASTER'            // Corrente Livre — dominador puro sem sub-dobra
+  | 'AIR_ACOLYTE'           // Acólito do Ar — segue os preceitos sem necessariamente dobrar
+  // ── NÃO-DOBRADOR ──
+  | 'NON_BENDER_LEADER'     // Estrategista — como Sokka
   | 'NON_BENDER_KYOSHI'     // Guerreiro de Kyoshi — disciplina e proteção
-  | 'NON_BENDER_CHI_BLOCKER' // Chi-Blocker — como Ty Lee
-  | 'NON_BENDER_ENGINEER';  // Engenheiro/Inventor — como o Mecanista
+  | 'NON_BENDER_CHI_BLOCKER' // Bloqueador de Chi — como Ty Lee
+  | 'NON_BENDER_ENGINEER';  // Engenheiro — como Asami e o Mecanista
 
 // ─── Score do Quiz ───
 export type ScoreObject = Partial<Record<ResultID, number>>;

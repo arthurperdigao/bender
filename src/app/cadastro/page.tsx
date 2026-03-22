@@ -1,6 +1,6 @@
 /**
  * src/app/cadastro/page.tsx
- * Página de cadastro temática do Portal das Quatro Nações
+ * Página de cadastro temática do Portal Avatar
  */
 "use client";
 
@@ -75,8 +75,8 @@ export default function CadastroPage() {
                         >
                             Iniciar a Jornada
                         </h1>
-                        <p className="text-sm" style={{ color: "#4a7a4a" }}>
-                            Registre-se no Portal das Quatro Nações
+                        <p className="text-sm" style={{ color: "#8b6b2a" }}>
+                            Registre-se no Portal Avatar
                         </p>
                     </div>
 

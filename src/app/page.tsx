@@ -7,12 +7,13 @@
  */
 'use client';
 
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { motion, useMotionValue, useSpring, useTransform, AnimatePresence } from 'framer-motion';
 import Link from 'next/link';
 import Navbar from '@/components/Navbar';
 import { useSession } from 'next-auth/react';
 import UserDashboardWidget from '@/components/dashboard/UserDashboardWidget';
+import NationLeaderboard from '@/components/ranking/NationLeaderboard';
 
 // ═══════════════════════════════════════════════════════════
 // PALETA TERROSA E IMAGENS ÉPICAS
@@ -93,7 +94,13 @@ const TuiAndLaInk = ({ size = 200, activeElement = 'none' }: { size?: number, ac
 // AS 4 RUNAS DOS ELEMENTOS (AVATAR)
 // ═══════════════════════════════════════════════════════════
 // eslint-disable-next-line @typescript-eslint/no-unused-vars, @typescript-eslint/no-explicit-any
-const ElementalRunes = ({ activeElement, mouseX, mouseY }: any) => {
+interface ElementalRunesProps {
+  activeElement: string;
+  mouseX: any; // MotionValue
+  mouseY: any; // MotionValue
+}
+
+const ElementalRunes = ({ activeElement, mouseX, mouseY }: ElementalRunesProps) => {
   // Parallax calculations para as runas
   const x1 = useTransform(mouseX, [0, 1000], [40, -40]);
   const y1 = useTransform(mouseY, [0, 1000], [40, -40]);
@@ -154,28 +161,50 @@ const ElementalRunes = ({ activeElement, mouseX, mouseY }: any) => {
 // PARTÍCULAS ELEMENTAIS ANIMADAS (Atmosfera Viva)
 // ═══════════════════════════════════════════════════════════
 const ElementalParticles = () => {
+  const [mounted, setMounted] = useState(false);
+  
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
   // Gera partículas pre-comutadas para performance com posições pseudo-aleatórias
   const particles = useMemo(() => {
     // Reduzimos um pouco a quantia para compensar o detalhamento visual
-    return Array.from({ length: 45 }).map((_, i) => {
+    return Array.from({ length: 30 }).map((_, i) => {
       const type = i % 4; // 0: Fire, 1: Water, 2: Air, 3: Earth
+      const size = Math.random() * (type === 3 ? 12 : 8) + 4;
+      const x = Math.random() * 100;
+      const y = Math.random() * 100;
+      
+      // Armazenamos todos os valores aleatórios que eram chamados no render aqui
       return {
         id: i,
         type,
-        x: Math.random() * 100, // %
-        y: Math.random() * 100, // %
-        // AUMENTADO - tamanho base maior
-        size: Math.random() * (type === 3 ? 12 : 8) + 4,
+        x,
+        y,
+        size,
         duration: Math.random() * 8 + (type === 2 ? 3 : 7), // Ar é mais rápido
         delay: Math.random() * 4,
+        // Específicos por tipo
+        fireHeightMult: 1 + Math.random(),
+        fireColor: Math.random() > 0.5 ? '#ff8b42' : '#ff4224',
+        fireAnimX: [x, x + (Math.random() * 8 - 4), x + (Math.random() * 12 - 6)],
+        fireAnimScale: [1, Math.random() * 2 + 1, 0.5],
+        earthShapeIdx: Math.floor(Math.random() * 3), // 0, 1, 2
+        earthColor: Math.random() > 0.5 ? '#6a5a40' : '#8a775c',
+        earthAnimX: [x, x + (Math.random() * 10 - 5)],
+        earthRotateDir: Math.random() > 0.5 ? 720 : -720,
+        airRotate: Math.random() * 25 - 12
       };
     });
   }, []);
 
+  if (!mounted) return null;
+
   return (
     <div className="absolute inset-0 pointer-events-none overflow-hidden z-[1]">
       {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
-      {particles.map((p: any) => {
+      {particles.map((p) => {
         // --- 0: FOGO (Brasas quentes distorcidas pelo calor) ---
         if (p.type === 0) {
           return (
@@ -183,17 +212,17 @@ const ElementalParticles = () => {
               style={{
                 left: `${p.x}%`,
                 width: p.size,
-                height: p.size * (1 + Math.random()), // Um pouco elíptica pelo vento ascendente
-                backgroundColor: Math.random() > 0.5 ? '#ff8b42' : '#ff4224', // Mistura laranjas e vermelhos
+                height: p.size * p.fireHeightMult, // Um pouco elíptica pelo vento ascendente
+                backgroundColor: p.fireColor, // Mistura laranjas e vermelhos
                 borderRadius: '40% 60% 70% 30% / 40% 50% 60% 50%', // Forma orgânica de fuligem
                 filter: 'drop-shadow(0px 0px 8px rgba(255, 66, 36, 1)) blur(0px)', // BEM visível
                 opacity: 1 // Não começa transparente
               }}
               animate={{
                 y: [`${p.y}vh`, `${p.y - 30}vh`, `${p.y - 70}vh`],
-                x: [`${p.x}%`, `${p.x + (Math.random() * 8 - 4)}%`, `${p.x + (Math.random() * 12 - 6)}%`],
+                x: p.fireAnimX.map((v: number) => `${v}%`),
                 opacity: [0, 1, 0], // Vai até 1
-                scale: [1, Math.random() * 2 + 1, 0.5] // Brasa engorda logo antes de sumir
+                scale: p.fireAnimScale
               }}
               transition={{ duration: p.duration * 0.8, delay: p.delay, repeat: Infinity, ease: 'easeOut' }}
             />
@@ -232,14 +261,14 @@ const ElementalParticles = () => {
             <motion.div key={p.id} className="absolute rounded-full"
               style={{
                 top: `${p.y}%`,
-                width: p.size * 35, // Fio BEM longo
-                height: Math.max(2, p.size / 2), // Mais gordinho para não sumir no fundo
-                background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.6), transparent)', // Brancão mais forte
-                filter: 'blur(2px)', // Menos blur pra ficar nítido
-                transform: `rotate(${Math.random() * 25 - 12}deg)` // Diagonal maior
+                width: p.size * 50, // Ainda mais longo
+                height: Math.max(1.5, p.size / 3), // Mais fino para elegância
+                background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent)', // Opacidade BEM baixa (0.1)
+                filter: 'blur(6px)', // Mais blur para suavizar as bordas
+                transform: `rotate(${p.airRotate}deg)`
               }}
-              animate={{ x: ['-30vw', '130vw'], opacity: [0, 0.7, 0] }} // Muito mais opaco e viaja mais longe
-              transition={{ duration: p.duration * 0.35, delay: p.delay, repeat: Infinity, ease: 'easeInOut' }}
+              animate={{ x: ['-40vw', '140vw'], opacity: [0, 0.3, 0] }} // Muito mais leve
+              transition={{ duration: p.duration * 0.5, delay: p.delay, repeat: Infinity, ease: 'linear' }}
             />
           );
         }
@@ -252,8 +281,7 @@ const ElementalParticles = () => {
             'polygon(50% 0%, 100% 38%, 82% 100%, 18% 100%, 0% 38%)', // Pentagon
             'polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%)' // Diamond
           ];
-          const shape = shapes[Math.floor(Math.random() * shapes.length)];
-          const color = Math.random() > 0.5 ? '#6a5a40' : '#8a775c'; // Dois tons de barro/terra
+          const shape = shapes[p.earthShapeIdx];
 
           return (
             <motion.div key={p.id} className="absolute"
@@ -261,15 +289,15 @@ const ElementalParticles = () => {
                 left: `${p.x}%`,
                 width: p.size * 1.5, // Nacos BEM grandões
                 height: p.size * 1.5,
-                backgroundColor: color,
+                backgroundColor: p.earthColor,
                 clipPath: shape,
                 opacity: 0.9, // Bem visível
                 filter: 'drop-shadow(3px 4px 4px rgba(0,0,0,0.8))' // Sombra rígida super escura
               }}
               animate={{
                 y: [`${p.y - 15}vh`, `${p.y + 45}vh`], // Caindo bem longe
-                x: [`${p.x}%`, `${p.x + (Math.random() * 10 - 5)}%`],
-                rotate: [0, Math.random() > 0.5 ? 720 : -720], // Gira mto mais pra mostrar a textura de pedra
+                x: p.earthAnimX.map((v: number) => `${v}%`),
+                rotate: [0, p.earthRotateDir], // Gira mto mais pra mostrar a textura de pedra
                 opacity: [0, 1, 0] // 100% opaco
               }}
               transition={{ duration: p.duration + 2, delay: p.delay, repeat: Infinity, ease: 'linear' }}
@@ -285,9 +313,15 @@ const ElementalParticles = () => {
 // ═══════════════════════════════════════════════════════════
 // HERO SECTION INTERATIVA — ESTILO AVATAR STUDIOS OFFICIAL
 // ═══════════════════════════════════════════════════════════
-// eslint-disable-next-line @typescript-eslint/no-unused-vars, @typescript-eslint/no-explicit-any
 const EpicHeroSection = ({ activeElement, setActiveElement, mouseX, mouseY }: any) => {
   const { data: session, status } = useSession();
+  const [mounted, setMounted] = useState(false);
+  const [bgIndex, setBgIndex] = useState(1);
+
+  React.useEffect(() => {
+    setMounted(true);
+    setBgIndex(Math.random() > 0.5 ? 1 : 2);
+  }, []);
 
   const scrollToQuiz = () => {
     window.location.href = '/quiz';
@@ -298,90 +332,111 @@ const EpicHeroSection = ({ activeElement, setActiveElement, mouseX, mouseY }: an
   };
 
   // Parallax super sutil para dar profundidade atmosférica
-  const bgX = useTransform(mouseX, [0, typeof window !== 'undefined' ? window.innerWidth : 1000], [-15, 15]);
-  const bgY = useTransform(mouseY, [0, typeof window !== 'undefined' ? window.innerHeight : 1000], [-15, 15]);
+  // Fixamos valores iniciais estáveis para SSR
+  const bgX = useTransform(mouseX, [0, 1200], [-15, 15]);
+  const bgY = useTransform(mouseY, [0, 800], [-15, 15]);
 
   return (
-    <section className="relative flex min-h-screen flex-col items-center justify-center p-8 text-center overflow-hidden"
+    <section className="relative flex min-h-screen w-full flex-col items-center justify-center p-8 text-center overflow-hidden"
       style={{
-        backgroundColor: '#f4ebd8',
-        backgroundImage: 'url("https://www.transparenttextures.com/patterns/aged-paper.png")'
+        backgroundColor: '#0a101a', // Azul Marinho Profundo (Spirit World)
+        backgroundImage: 'radial-gradient(circle at center, rgba(46, 75, 115, 0.15) 0%, transparent 70%)'
       }}>
 
-      {/* 🌟 FUNDO CINEMATOGRÁFICO EM LOOP (ESTILO AVATAR STUDIOS) 🌟 */}
+      {/* 🌟 FUNDO MINIMALISTA 4K (FOCO ATMOSFÉRICO — CLEAN & ZEN) 🌟 */}
       <motion.div
-        className="absolute inset-[-50px] z-0 pointer-events-none"
+        className="absolute inset-0 z-0 pointer-events-none w-full h-full overflow-hidden"
         style={{ x: bgX, y: bgY }}
       >
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img
-          src="/assets/hero_spirit_world_1771657132063.png"
-          alt="Avatar Epic Scenery"
-          className="w-full h-full object-cover opacity-[0.14] mix-blend-multiply sepia-[0.3] contrast-125 saturate-50 blur-[2px]"
+        {/* ARTE DIGITAL ÚNICA — PINTURA DIGITAL EM 16:9 — SEM ESTICAR */}
+        <motion.img 
+          src="/assets/images/backgrounds/minimalist_spirit_4k.png" 
+          alt="Spirit Wilds Horizon" 
+          className="w-full h-full object-cover opacity-100 brightness-[1.05]"
+          animate={{ scale: [1, 1.05, 1] }}
+          transition={{ duration: 40, repeat: Infinity, ease: 'easeInOut' }}
         />
-        {/* Overlay Azul Marinho Profundo exato do Avatar Studios -> rgb(36, 42, 60) misturado com preto */}
-        <div className="absolute inset-0 bg-gradient-to-t from-[#f4ebd8] via-transparent to-[#f4ebd8]/40" />
+        
+        {/* Gradiente de Fusão — Para um olhar mais Sóbrio e Elegante */}
+        <div className="absolute inset-0 bg-gradient-to-t from-[#0a101a] via-transparent to-[#0a101a]/70 z-20" />
+
+        {/* 🎬 CAMADA DE TEXTURA — RUÍDO CINEMATOGRÁFICO & PÁTINA (DISFARCE ORGÂNICO) 🎬 */}
+        <div className="absolute inset-0 z-30 pointer-events-none opacity-[0.08] mix-blend-overlay"
+          style={{
+            backgroundImage: 'url("https://www.transparenttextures.com/patterns/stardust.png")',
+            animation: 'noise-drift 8s steps(10) infinite'
+          }} />
+        <div className="absolute inset-0 z-40 pointer-events-none opacity-[0.05] mix-blend-multiply"
+          style={{
+            backgroundImage: 'url("https://www.transparenttextures.com/patterns/aged-paper.png")',
+          }} />
       </motion.div>
 
-      {/* Partículas Elementais sutis no Background */}
+      {/* Partículas Elementais sutis no Background — Menores e mais leves */}
       <ElementalParticles />
 
       {/* Título e Logo (Com inspiração clara na caligrafia 'Spirit Wilds') */}
-      <motion.div className="relative z-10 flex flex-col items-center justify-center mt-12"
+      <motion.div className="relative z-30 flex flex-col items-center justify-center mt-12 w-full max-w-5xl mx-auto"
         initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 1.5 }}>
 
-        <h2 className="mb-2 text-sm md:text-md uppercase tracking-[0.6em] font-bold text-[#4a3d34]"
+        <h2 className="mb-4 text-[0.6rem] md:text-xs uppercase tracking-[0.8em] font-bold text-[#dcb670] opacity-80"
           style={{ fontFamily: 'var(--font-cinzel), serif' }}>
-          Jornada Literária
+          Portal Avatar
         </h2>
-
-        <h1 className="text-6xl md:text-8xl font-black tracking-tight text-[#2c1e16] uppercase leading-none mt-2"
-          style={{
-            fontFamily: 'var(--font-cinzel), serif',
-            textShadow: '0 4px 15px rgba(0,0,0,0.1)',
-            letterSpacing: '0.05em'
-          }}>
-          Avatar <br />
-          <span className="text-3xl md:text-5xl text-[#991b1b] tracking-widest block mt-4" style={{ textShadow: '0 4px 10px rgba(153, 27, 27, 0.2)' }}>
-            Quatro Nações
-          </span>
-        </h1>
+        
+        {/* Logo Customizada "Avatar: Legado Elemental" */}
+        <div className="relative mb-6 flex flex-col items-center">
+          <h1 className="text-7xl md:text-9xl font-black tracking-tight text-white uppercase leading-none whitespace-normal md:whitespace-nowrap"
+            style={{
+              fontFamily: 'var(--font-cinzel), serif',
+              textShadow: '0 0 40px rgba(255,255,255,0.25)',
+              letterSpacing: '0.1em'
+            }}>
+            Avatar
+          </h1>
+          <div className="flex items-center justify-center gap-4 mt-2 w-full">
+            <span className="h-px w-8 md:w-24 bg-gradient-to-r from-transparent to-[#dcb670]" />
+            <span className="text-sm md:text-3xl font-bold tracking-[0.4em] uppercase text-[#dcb670] whitespace-nowrap"
+              style={{ fontFamily: 'var(--font-cinzel), serif', textShadow: '0 0 15px rgba(220, 182, 112, 0.4)' }}>
+              Legado Elemental
+            </span>
+            <span className="h-px w-8 md:w-24 bg-gradient-to-l from-transparent to-[#dcb670]" />
+          </div>
+        </div>
 
         {/* Os 4 Elementos Alinhados Horizontalmente (Estilo site oficial) */}
         <div className="flex items-center justify-center gap-8 md:gap-16 mb-16 mt-8">
-          <div className="flex items-center justify-center w-14 h-14 rounded-full border-2 border-[#5a9ec4] bg-[#5a9ec4]/10 text-3xl hover:scale-125 transition-transform duration-300 cursor-pointer drop-shadow-[0_0_15px_rgba(90,158,196,0.3)] filter grayscale-[20%] hover:grayscale-0">🌊</div>
-          <div className="flex items-center justify-center w-14 h-14 rounded-full border-2 border-[#8fa04a] bg-[#8fa04a]/10 text-3xl hover:scale-125 transition-transform duration-300 cursor-pointer drop-shadow-[0_0_15px_rgba(160,184,76,0.3)] filter grayscale-[20%] hover:grayscale-0">⛰️</div>
-          <div className="flex items-center justify-center w-14 h-14 rounded-full border-2 border-[#cc4a2e] bg-[#cc4a2e]/10 text-3xl hover:scale-125 transition-transform duration-300 cursor-pointer drop-shadow-[0_0_15px_rgba(255,106,66,0.3)] filter grayscale-[20%] hover:grayscale-0">🔥</div>
-          <div className="flex items-center justify-center w-14 h-14 rounded-full border-2 border-[#81a1c1] bg-[#81a1c1]/10 text-3xl hover:scale-125 transition-transform duration-300 cursor-pointer drop-shadow-[0_0_15px_rgba(242,197,106,0.3)] filter grayscale-[20%] hover:grayscale-0">🫧</div>
+          <div className="flex items-center justify-center w-14 h-14 rounded-full border border-white/20 bg-white/5 text-3xl hover:scale-125 transition-all duration-300 cursor-pointer hover:border-[#5a9ec4] hover:shadow-[0_0_20px_rgba(90,158,196,0.5)]">🌊</div>
+          <div className="flex items-center justify-center w-14 h-14 rounded-full border border-white/20 bg-white/5 text-3xl hover:scale-125 transition-all duration-300 cursor-pointer hover:border-[#8fa04a] hover:shadow-[0_0_20px_rgba(160,184,76,0.5)]">⛰️</div>
+          <div className="flex items-center justify-center w-14 h-14 rounded-full border border-white/20 bg-white/5 text-3xl hover:scale-125 transition-all duration-300 cursor-pointer hover:border-[#cc4a2e] hover:shadow-[0_0_20px_rgba(255,106,66,0.5)]">🔥</div>
+          <div className="flex items-center justify-center w-14 h-14 rounded-full border border-white/20 bg-white/5 text-3xl hover:scale-125 transition-all duration-300 cursor-pointer hover:border-[#81a1c1] hover:shadow-[0_0_20px_rgba(242,197,106,0.5)]">🫧</div>
         </div>
 
         {/* CONDIÇÃO: Logado mostra Dashboard / Não logado mostra Botão */}
-        {status === 'loading' ? (
-          <div className="h-40 w-full max-w-2xl mx-auto rounded-xl bg-[#c2b29a]/20 border border-[#c2b29a]/40 animate-pulse mt-8" />
+        {!mounted || status === 'loading' ? (
+          <div className="h-40 w-full max-w-2xl mx-auto rounded-xl bg-white/5 border border-white/10 animate-pulse mt-8" />
         ) : session?.user ? (
-          <div className="w-full mt-4 mb-16 relative z-20 dashboard-parchment-theme">
-            <UserDashboardWidget />
-          </div>
+          <UserDashboardWidget />
         ) : (
           <>
             {/* CTA Principal - "Take the Bending Quiz" em Dourado Pergaminho */}
             <motion.button
               onClick={scrollToQuiz}
-              whileHover={{ scale: 1.05 }}
+              whileHover={{ scale: 1.05, boxShadow: "0 0 40px rgba(220, 182, 112, 0.4)" }}
               whileTap={{ scale: 0.95 }}
-              className="relative px-12 py-5 text-sm md:text-lg font-bold tracking-[0.2em] uppercase transition-all duration-300 text-[#f4ebd8] hover:text-white shadow-[0_4px_15px_rgba(44,30,22,0.4)] hover:shadow-[0_8px_25px_rgba(44,30,22,0.6)]"
+              className="relative px-12 py-5 text-sm md:text-lg font-bold tracking-[0.3em] uppercase transition-all duration-500 text-black shadow-[0_10px_30px_rgba(0,0,0,0.5)]"
               style={{
-                backgroundColor: '#2c1e16', // Cor de nanquim
+                background: "linear-gradient(135deg, #dcb670, #c4a160)",
                 fontFamily: 'var(--font-cinzel), serif',
-                clipPath: 'polygon(5% 0%, 95% 0%, 100% 50%, 95% 100%, 5% 100%, 0% 50%)', // Simula borda decorativa asiática
+                clipPath: 'polygon(5% 0%, 95% 0%, 100% 50%, 95% 100%, 5% 100%, 0% 50%)',
                 border: 'none'
               }}>
-              Descubra Seu Elemento
+              Descobrir Destino
             </motion.button>
 
             {/* Sub Botão "Explore More" estético */}
-            <div className="mt-8 text-[#5c4a3e] text-xs tracking-widest uppercase mb-16 cursor-pointer hover:text-[#991b1b] font-bold transition-colors" onClick={scrollToModules}>
-              Explorar o Universo
+            <div className="mt-8 text-white/40 text-[10px] tracking-[0.4em] uppercase mb-16 cursor-pointer hover:text-[#dcb670] font-bold transition-all" onClick={scrollToModules}>
+              Explorar Crônicas
             </div>
           </>
         )}
@@ -389,15 +444,14 @@ const EpicHeroSection = ({ activeElement, setActiveElement, mouseX, mouseY }: an
       </motion.div>
 
       {/* Indicador de Scroll no canto inferior esquerdo */}
-      <div className="absolute bottom-8 left-8 flex flex-col items-center gap-2 opacity-60">
-        <span className="text-[10px] uppercase tracking-[0.3em] font-bold text-[#2c1e16] transform -rotate-90 origin-bottom mb-8">Navegar</span>
+      <div className="absolute bottom-8 left-8 flex flex-col items-center gap-2 opacity-40">
+        <span className="text-[10px] uppercase tracking-[0.3em] font-bold text-white transform -rotate-90 origin-bottom mb-8">Sabedoria</span>
         <motion.div
           animate={{ y: [0, 10, 0] }}
           transition={{ duration: 1.5, repeat: Infinity, ease: "easeInOut" }}
-          className="w-px h-12 bg-[#2c1e16]"
+          className="w-px h-12 bg-white"
         />
       </div>
-
     </section>
   );
 };
@@ -420,34 +474,50 @@ const EPIC_MODULES: EpicModuleCard[] = [
   {
     title: 'Pai Sho', subtitle: 'Jogo de Tabuleiro', element: 'earth',
     description: 'Jogue online o milenar jogo de mesa da Ordem do Lótus Branco. Alinhe os lótus de pedra contra a Inteligência Artificial e comprove sua maestria.',
-    image: '/assets/nation_earth_1771657163486.png',
+    image: '/assets/images/pai_sho_spiritual.png',
     href: '/arena/pai-sho',
   },
   {
-    title: 'Pergaminhos Antigos', subtitle: 'Simulador Interativo', element: 'water',
-    description: 'Um ambiente interativo de treino. Estude visualmente o fluxo da água, terra, fogo e ar praticando na tela as exatas posturas marciais das dobras.',
-    image: '/assets/media__1771655221627.png',
-    href: '/arena/bending-practice',
+    title: 'Arcade Elemental', subtitle: 'Mini-Games Viciantes', element: 'water',
+    description: 'Divirta-se com 4 jogos exclusivos: Flappy Appa, Avatar 2048, Defesa da Ordem e o Salto do Nômade. Supere seus limites e conquiste recordes.',
+    image: '/assets/arcade-hero.png',
+    href: '/arena/arcade',
   },
   {
     title: 'Pergaminhos de Wan Shi Tong', subtitle: 'Trivia de Esforço (Quiz)', element: 'fire',
     description: 'Um segundo teste, mas focado puramente em conhecimentos! Apenas os fãs mais hardcore conseguirão gabaritar este Quiz de 48 questões de altíssima dificuldade.',
-    image: '/assets/nation_fire_1771657181321.png',
+    image: '/assets/images/wan_shi_tong_library.png',
     href: '/arena/trivia',
   },
 ];
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const EpicModulesSection = ({ setActiveElement }: any) => (
-  <section id="modules" className="relative py-32 px-6 md:px-12 bg-transparent">
+  <section id="modules" className="relative py-32 px-6 md:px-12 overflow-hidden"
+    style={{
+      backgroundColor: '#0b0e14', 
+      backgroundImage: `
+        radial-gradient(circle at 50% -20%, rgba(167, 146, 255, 0.08) 0%, transparent 60%),
+        radial-gradient(circle at 50% 120%, rgba(220, 182, 112, 0.05) 0%, transparent 60%)
+      `,
+      boxShadow: 'inset 0 0 100px rgba(0, 0, 0, 0.8), inset 0 0 40px rgba(0, 0, 0, 0.5)' 
+    }}>
+    
+    {/* Textura de Ruído Sutil (Overlay) */}
+    <div className="absolute inset-0 opacity-[0.03] pointer-events-none mix-blend-overlay"
+      style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E")` }}>
+    </div>
+
+    {/* Efeito de Vinheta (Vignette) */}
+    <div className="absolute inset-0 pointer-events-none shadow-[inset_0_0_150px_rgba(0,0,0,0.9)] opacity-60"></div>
 
     <motion.div className="text-center mb-24 relative z-10"
       initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.8 }}>
-      <h2 className="text-sm uppercase tracking-[0.6em] mb-4 text-[#991b1b] font-bold" style={{ fontFamily: 'var(--font-cinzel), serif' }}>Os Arquivos Secretos</h2>
-      <h3 className="text-4xl md:text-5xl font-black text-[#2c1e16] uppercase tracking-widest" style={{ fontFamily: 'var(--font-cinzel), serif' }}>
+      <h2 className="text-xs uppercase tracking-[0.6em] mb-4 text-[#dcb670] font-bold" style={{ fontFamily: 'var(--font-cinzel), serif' }}>Os Arquivos Secretos</h2>
+      <h3 className="text-4xl md:text-5xl font-black text-white uppercase tracking-widest" style={{ fontFamily: 'var(--font-cinzel), serif' }}>
         Jornada do Conhecimento
       </h3>
-      <div className="mx-auto w-16 h-[2px] mt-8 bg-[#991b1b]"></div>
+      <div className="mx-auto w-16 h-[2px] mt-8 bg-[#dcb670]"></div>
     </motion.div>
 
     <div className="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-16 relative z-10">
@@ -458,36 +528,34 @@ const EpicModulesSection = ({ setActiveElement }: any) => (
           initial={{ opacity: 0, y: 40 }} whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }} transition={{ delay: i * 0.15, duration: 0.8 }}>
           <Link href={mod.href} className="group block h-full">
-            <div className="relative flex flex-col h-full rounded transition-all duration-[0.8s] hover:-translate-y-2"
+            <div className="relative flex flex-col h-full rounded-2xl transition-all duration-[0.8s] hover:-translate-y-2 group-hover:shadow-[0_30px_60px_-15px_rgba(0,0,0,0.8)] bg-[#0a101a]/80 backdrop-blur-md"
               style={{
-                backgroundColor: "#f4ebd8", // Base de pergaminho
-                backgroundImage: `url("data:image/svg+xml,%3Csvg width='100' height='100' viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100' height='100' filter='url(%23noise)' opacity='0.08'/%3E%3C/svg%3E")`,
-                border: `2px solid #d4c4a8`,
-                boxShadow: `0 20px 40px -10px rgba(0,0,0,0.2), inset 0 0 60px rgba(139, 69, 19, 0.05)`,
-                clipPath: 'polygon(2% 0%, 98% 0%, 100% 2%, 100% 98%, 98% 100%, 2% 100%, 0% 98%, 0% 2%)' // Bordas sutilmente cortadas nos cantos imitando papel desgastado
+                border: `1px solid rgba(220, 182, 112, 0.1)`,
+                boxShadow: `inset 0 0 60px rgba(0, 0, 0, 0.2)`,
               }}>
 
-              <div className="relative h-72 overflow-hidden border-b-2 border-[#d4c4a8]">
-                <div className="absolute inset-0 bg-gradient-to-t from-[#f4ebd8] via-transparent to-transparent z-10 group-hover:from-transparent transition-all duration-700" />
-                <div className="absolute inset-0 bg-[#2c1e16]/20 group-hover:bg-transparent transition-colors duration-700 z-10" />
+              {/* Contêiner da Imagem */}
+              <div className="relative h-72 group-hover:h-[28rem] transition-[height] duration-1000 ease-[cubic-bezier(0.25,1,0.5,1)] overflow-hidden border-b border-white/5 shrink-0">
+                <div className="absolute inset-0 bg-gradient-to-t from-[#0a101a] via-transparent to-transparent z-10 opacity-60 group-hover:opacity-20 transition-opacity duration-700" />
                 {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src={mod.image} alt={mod.title} className="w-full h-full object-cover transform group-hover:scale-[1.03] transition-transform duration-[1.5s] ease-out filter mix-blend-multiply opacity-90 group-hover:opacity-100 grayscale-[10%]" />
+                <img src={mod.image} alt={mod.title} className="w-full h-full object-cover transform scale-100 group-hover:scale-105 transition-transform duration-[1.5s] ease-out brightness-75 group-hover:brightness-100" />
               </div>
 
-              <div className="p-10 flex-1 flex flex-col justify-between transition-colors duration-500 relative z-20 hover:bg-[#fbf4e6]">
+              {/* Contêiner de Texto */}
+              <div className="p-10 flex-1 flex flex-col justify-between transition-all duration-700 relative z-20 group-hover:bg-white/5">
                 <div>
-                  <div className="text-xs uppercase tracking-[0.4em] font-bold mb-3 text-[#991b1b]">
+                  <div className="text-[10px] uppercase tracking-[0.5em] font-bold mb-3 text-[#dcb670]">
                     {mod.subtitle}
                   </div>
-                  <h4 className="text-3xl font-bold mb-5 text-[#2c1e16] tracking-wide" style={{ fontFamily: 'var(--font-cinzel), serif' }}>
+                  <h4 className="text-2xl font-bold mb-5 text-white tracking-widest uppercase" style={{ fontFamily: 'var(--font-cinzel), serif' }}>
                     {mod.title}
                   </h4>
-                  <p className="text-base leading-relaxed text-[#5c4a3e] font-medium">
+                  <p className="text-sm leading-relaxed text-white/60 font-medium transition-all duration-700 group-hover:text-white/80">
                     {mod.description}
                   </p>
                 </div>
-                <div className="mt-8 flex items-center gap-2 text-sm uppercase tracking-widest text-[#991b1b] font-bold transition-colors duration-300">
-                  <span className="transform group-hover:translate-x-2 transition-transform duration-300">Explorar Módulo</span>
+                <div className="mt-8 flex items-center gap-2 text-[10px] uppercase tracking-[0.3em] text-[#dcb670] font-bold">
+                  <span className="transform group-hover:translate-x-2 transition-transform duration-300">Explorar Destino</span>
                   <span className="transform group-hover:translate-x-4 transition-transform duration-300">→</span>
                 </div>
               </div>
@@ -547,7 +615,7 @@ const EPIC_NATIONS: EpicNationData[] = [
 ];
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-const EpicNationsSection = ({ setActiveElement }: any) => {
+const EpicNationsSection = ({ setActiveElement }: { setActiveElement: (el: string) => void }) => {
   const [selectedNation, setSelectedNation] = useState<EpicNationData | null>(null);
 
   // Fecha modal com a tecla ESC
@@ -561,17 +629,26 @@ const EpicNationsSection = ({ setActiveElement }: any) => {
 
   return (
     <>
-      <section className="relative w-full overflow-hidden" style={{ backgroundColor: '#e6dec1' }}>
-        <div className="w-full grid mx-auto grid-cols-1 md:grid-cols-4 h-full md:h-[700px]">
+      <section className="relative w-full overflow-hidden" style={{ backgroundColor: '#0b0e14' }}>
+        <div className="w-full grid mx-auto grid-cols-1 md:grid-cols-4 h-full md:h-[550px]">
           {EPIC_NATIONS.map((nation, i) => (
-            <motion.div key={nation.name} className="relative group overflow-hidden h-[400px] md:h-full cursor-pointer border-r border-[#c2b29a]/30 last:border-0"
+            <motion.div key={nation.name} className="relative group overflow-hidden h-[350px] md:h-full cursor-pointer border-r border-[#c2b29a]/20 last:border-0"
               onHoverStart={() => setActiveElement(nation.id)}
               onHoverEnd={() => setActiveElement('none')}
               onClick={() => setSelectedNation(nation)}
               initial={{ opacity: 0 }} whileInView={{ opacity: 1 }} viewport={{ once: true }} transition={{ delay: i * 0.1, duration: 1 }}>
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={nation.image} alt={nation.name}
-                className="absolute inset-0 w-full h-full object-cover transform scale-[1.05] group-hover:scale-100 transition-transform duration-[2s] ease-out brightness-75 contrast-[1.05] sepia-[0.3] group-hover:sepia-0 group-hover:brightness-100" />
+              
+              {/* Container da Imagem com Moldura de Pergaminho */}
+              <div className="absolute inset-0 w-full h-full p-2 bg-[#1a120b]">
+                <div className="relative w-full h-full overflow-hidden border-[10px] border-[#dcb670]/20 shadow-inner">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src={nation.image} alt={nation.name}
+                    className="absolute inset-0 w-full h-full object-cover transform scale-[1.15] group-hover:scale-[1.25] transition-transform duration-[2s] ease-out brightness-75 contrast-[1.1] sepia-[0.2] group-hover:sepia-0 group-hover:brightness-110" />
+                  
+                  {/* Overlay de Textura de Papel para unificar as artes */}
+                  <div className="absolute inset-0 opacity-20 pointer-events-none mix-blend-overlay bg-[url('https://www.transparenttextures.com/patterns/dark-leather.png')]" />
+                </div>
+              </div>
 
               {/* Overlays cinematográficos Parchment */}
               <div className="absolute inset-0 bg-[#e6dec1]/20 group-hover:bg-[#e6dec1]/0 transition-colors duration-[1s]" />
@@ -646,46 +723,56 @@ const EpicNationsSection = ({ setActiveElement }: any) => {
                 </div>
 
                 {/* Conteúdo do Pergaminho */}
-                <div className="p-8 md:p-12 pb-24 text-[#5c4a3e]">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
-                    
-                    {/* Coluna 1: Cultura & Filosofia */}
-                    <div>
-                      <h4 className="flex items-center gap-3 text-lg tracking-[0.3em] uppercase font-bold text-[#991b1b] mb-4" style={{ fontFamily: 'var(--font-cinzel), serif' }}>
-                        <span className="w-8 h-[1px] bg-[#991b1b]" />
-                        Cultura & Etimologia
-                      </h4>
-                      <div className="text-[1.05rem] leading-loose whitespace-pre-line text-justify font-serif" style={{ color: '#4a3d34' }}>
-                        {selectedNation.lore.culture}
-                      </div>
+                <div className="p-8 md:p-16 pb-24 text-[#5c4a3e] max-w-4xl mx-auto flex flex-col gap-16">
+                  
+                  {/* Seção 1: Cultura & Filosofia */}
+                  <div className="relative">
+                    <h4 className="flex items-center justify-center gap-4 text-xl tracking-[0.3em] uppercase font-bold text-[#991b1b] mb-10 text-center" style={{ fontFamily: 'var(--font-cinzel), serif' }}>
+                      <span className="w-16 h-[1px] bg-[#991b1b]/40" />
+                      Cultura & Etimologia
+                      <span className="w-16 h-[1px] bg-[#991b1b]/40" />
+                    </h4>
+                    <div className="text-lg leading-relaxed font-serif text-[#4a3d34] space-y-6">
+                      {selectedNation.lore.culture.split('\n\n').map((paragraph, idx) => (
+                        <p key={idx} className={idx === 0 ? "first-letter:text-6xl first-letter:font-bold first-letter:mr-2 first-letter:float-left first-letter:text-[#991b1b] first-letter:mt-[-4px]" : ""}>
+                          {paragraph}
+                        </p>
+                      ))}
                     </div>
-
-                    {/* Coluna 2: A Dobra, Origem Espiritual e Conflitos Históricos */}
-                    <div className="space-y-12">
-                      <div>
-                        <h4 className="flex items-center gap-3 text-lg tracking-[0.3em] uppercase font-bold text-[#991b1b] mb-4" style={{ fontFamily: 'var(--font-cinzel), serif' }}>
-                          <span className="w-8 h-[1px] bg-[#991b1b]" />
-                          O Caminho da Dobra
-                        </h4>
-                        <div className="text-[1.05rem] leading-loose whitespace-pre-line text-justify font-serif" style={{ color: '#4a3d34' }}>
-                          {selectedNation.lore.bending}
-                        </div>
-                      </div>
-
-                      <div className="bg-[#e6dec1]/40 border border-[#c2b29a]/50 p-6 md:p-8 rounded-sm shadow-inner relative">
-                        <div className="absolute -top-3 left-8 bg-[#f4ebd8] px-2 text-[#991b1b] font-bold tracking-widest text-xs uppercase">
-                          Registros Canônicos - Quadrinhos
-                        </div>
-                        <h4 className="text-lg tracking-[0.2em] uppercase font-bold text-[#2c1e16] mb-3" style={{ fontFamily: 'var(--font-cinzel), serif' }}>
-                          Evolução Pós-Guerra
-                        </h4>
-                        <div className="text-base leading-relaxed whitespace-pre-line text-justify italic font-serif" style={{ color: '#4a3d34' }}>
-                          {selectedNation.lore.comics}
-                        </div>
-                      </div>
-                    </div>
-
                   </div>
+
+                  {/* Seção 2: O Caminho da Dobra */}
+                  <div className="relative">
+                    <h4 className="flex items-center justify-center gap-4 text-xl tracking-[0.3em] uppercase font-bold text-[#991b1b] mb-10 text-center" style={{ fontFamily: 'var(--font-cinzel), serif' }}>
+                      <span className="w-16 h-[1px] bg-[#991b1b]/40" />
+                      A Arte da Dobra
+                      <span className="w-16 h-[1px] bg-[#991b1b]/40" />
+                    </h4>
+                    <div className="text-lg leading-relaxed font-serif text-[#4a3d34] space-y-6">
+                      <div className="text-center italic text-xl text-[#991b1b] mb-10 px-8 opacity-90 font-medium">
+                        &quot;{selectedNation.philosophy}&quot;
+                      </div>
+                      {selectedNation.lore.bending.split('\n\n').map((paragraph, idx) => (
+                        <p key={idx}>{paragraph}</p>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Seção 3: Registros Canônicos */}
+                  <div className="bg-[#e6dec1]/40 border border-[#c2b29a]/50 p-8 md:p-12 rounded-sm shadow-inner relative mt-4">
+                    <div className="absolute -top-3 left-1/2 transform -translate-x-1/2 bg-[#f4ebd8] px-4 text-[#991b1b] font-bold tracking-widest text-[10px] md:text-xs uppercase shadow-sm border border-[#c2b29a]/40 whitespace-nowrap">
+                      Registros Canônicos Oficiais
+                    </div>
+                    <h4 className="text-lg tracking-[0.2em] uppercase font-bold text-[#2c1e16] mb-6 text-center" style={{ fontFamily: 'var(--font-cinzel), serif' }}>
+                      Evolução Pós-Guerra (HQs)
+                    </h4>
+                    <div className="text-base md:text-lg leading-relaxed font-serif text-[#4a3d34] italic space-y-6">
+                      {selectedNation.lore.comics.split('\n\n').map((paragraph, idx) => (
+                        <p key={idx}>{paragraph}</p>
+                      ))}
+                    </div>
+                  </div>
+
                 </div>
               </div>
 
@@ -712,30 +799,30 @@ const EpicNationsSection = ({ setActiveElement }: any) => {
 // FOOTER — Pergaminho Final
 // ═══════════════════════════════════════════════════════════
 const EpicFooter = () => (
-  <footer className="relative py-24 px-6 text-center overflow-hidden bg-[#e6dec1] border-t border-[#c2b29a]/50">
+  <footer className="relative py-24 px-6 text-center overflow-hidden bg-[#0a101a] border-t border-white/5">
     {/* Decoração sutil de fundo */}
-    <div className="absolute inset-0 flex justify-center items-center opacity-5 pointer-events-none">
-      <span className="text-[300px] text-[#2c1e16]" style={{ fontFamily: 'var(--font-cinzel), serif' }}>A</span>
+    <div className="absolute inset-0 flex justify-center items-center opacity-[0.03] pointer-events-none">
+      <span className="text-[300px] text-white" style={{ fontFamily: 'var(--font-cinzel), serif' }}>A</span>
     </div>
 
-    <motion.div className="mb-12 w-16 h-16 mx-auto opacity-70 hover:opacity-100 transition-opacity duration-500 cursor-pointer"
+    <motion.div className="mb-12 w-16 h-16 mx-auto opacity-40 hover:opacity-100 transition-opacity duration-500 cursor-pointer"
       animate={{ rotate: 360 }} transition={{ duration: 60, repeat: Infinity, ease: 'linear' }}>
       <TuiAndLaInk size={64} activeElement="water" />
     </motion.div>
 
-    <h2 className="text-2xl md:text-3xl font-black mb-8 text-[#2c1e16] uppercase tracking-widest" style={{ fontFamily: 'var(--font-cinzel), serif' }}>
+    <h2 className="text-2xl md:text-3xl font-black mb-8 text-white uppercase tracking-widest" style={{ fontFamily: 'var(--font-cinzel), serif' }}>
       &quot;A sabedoria vem não do poder,<br className="hidden md:block" /> mas da compreensão.&quot;
     </h2>
 
-    <div className="w-8 h-[2px] mx-auto bg-[#991b1b] mb-8"></div>
+    <div className="w-8 h-[2px] mx-auto bg-[#dcb670] mb-8"></div>
 
-    <div className="text-xs md:text-sm space-y-3 text-[#5c4a3e] uppercase tracking-[0.2em] font-bold">
+    <div className="text-[10px] md:text-xs space-y-3 text-white/40 uppercase tracking-[0.4em] font-bold">
       <p>Um projeto dedicado ao Universo das Quatro Nações.</p>
       <p>Bending The Elements Since 2005.</p>
     </div>
 
-    <div className="mt-16 text-[10px] text-[#4a3d34] tracking-widest uppercase">
-      © {new Date().getFullYear()} Avatar V-Platform. All Rights Reserved.
+    <div className="mt-16 text-[9px] text-white/20 tracking-[0.5em] uppercase font-bold">
+      © {new Date().getFullYear()} Avatar Chronicles. All Rights Reserved.
     </div>
   </footer>
 );
@@ -747,10 +834,16 @@ export default function EpicHomePage() {
   const [activeElement, setActiveElement] = useState('none');
 
   // Rastreamento suave do mouse
-  const mouseX = useMotionValue(typeof window !== 'undefined' ? window.innerWidth / 2 : 500);
-  const mouseY = useMotionValue(typeof window !== 'undefined' ? window.innerHeight / 2 : 500);
+  const mouseX = useMotionValue(0);
+  const mouseY = useMotionValue(0);
   const smoothX = useSpring(mouseX, { damping: 50, stiffness: 400 });
   const smoothY = useSpring(mouseY, { damping: 50, stiffness: 400 });
+
+  useEffect(() => {
+    // Definimos posição central inicial apenas no cliente para evitar mismatch de hydration
+    mouseX.set(window.innerWidth / 2);
+    mouseY.set(window.innerHeight / 2);
+  }, [mouseX, mouseY]);
 
   const handleMouseMove = (e: React.MouseEvent) => {
     mouseX.set(e.clientX);
@@ -758,11 +851,11 @@ export default function EpicHomePage() {
   };
 
   return (
-    <main className="min-h-screen relative overflow-x-hidden font-lora bg-[#f4ebd8]" 
-      style={{ backgroundImage: 'url("https://www.transparenttextures.com/patterns/aged-paper.png")' }} 
+    <main className="min-h-screen relative overflow-x-hidden font-lora bg-[#0a101a]" 
       onMouseMove={handleMouseMove}>
       <Navbar />
       <EpicHeroSection activeElement={activeElement} setActiveElement={setActiveElement} mouseX={smoothX} mouseY={smoothY} />
+      <NationLeaderboard />
       <EpicModulesSection setActiveElement={setActiveElement} />
       <EpicNationsSection setActiveElement={setActiveElement} />
       <EpicFooter />

@@ -1,11 +1,11 @@
 /**
  * src/app/login/page.tsx
- * Página de login temática do Portal das Quatro Nações
+ * Página de login temática do Portal Avatar
  */
 "use client";
 
 import { useState, useTransition } from "react";
-import { loginUser } from "@/lib/actions/auth";
+import { signIn } from "next-auth/react";
 import Link from "next/link";
 import { Suspense } from "react";
 
@@ -22,10 +22,22 @@ function LoginForm() {
         // o redirect é feito dentro do action
 
         startTransition(async () => {
-            const resultado = await loginUser(formData);
-            // Se chegou aqui foi erro (pois sucesso joga exception de redirect)
-            if (resultado && !resultado.success) {
-                setErro(resultado.error);
+            const email = formData.get("email");
+            const password = formData.get("password");
+
+            // Chamada de SignIn Client-side para que o redirecionamento
+            // não sofra dos problemas de cache do App Router
+            const resultado = await signIn("credentials", {
+                email,
+                password,
+                redirect: false,
+            });
+
+            if (resultado?.error) {
+                setErro("Email ou senha incorretos.");
+            } else if (resultado?.ok) {
+                // Força um full refresh ao redirecionar, limpando todo cache de layout
+                window.location.href = "/";
             }
         });
     }
@@ -63,7 +75,7 @@ function LoginForm() {
                             className="text-2xl font-bold mb-1"
                             style={{ fontFamily: "var(--font-cinzel)", color: "#f4d03f" }}
                         >
-                            Portal das Quatro Nações
+                            Portal Avatar
                         </h1>
                         <p className="text-sm" style={{ color: "#a07840" }}>
                             Identifique-se, viajante

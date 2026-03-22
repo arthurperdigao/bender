@@ -1,26 +1,132 @@
+// ============================================================
+// schema.prisma - Portal das Quatro Nacoes
+// Banco: SQLite (dev local) | ORM: Prisma 7
+// ============================================================
+
 generator client {
   provider = "prisma-client-js"
 }
 
 datasource db {
-  provider = "sqlite"
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
 }
 
+// ============================================================
+// 1. USER
+// ============================================================
 model User {
-  id               String   @id @default(cuid())
-  nome             String
-  sobrenome        String
-  idade            Int
-  cidade           String
-  email            String   @unique
-  hashedPassword   String
-  elementoNato     String?
-  paiShoScore      Int      @default(0)
-  paiShoWinsEasy   Int      @default(0)
-  paiShoWinsMedium Int      @default(0)
-  paiShoWinsHard   Int      @default(0)
-  paiShoWinsMaster Int      @default(0)
-  pergaminhosScore Int      @default(0)
-  createdAt        DateTime @default(now())
-  updatedAt        DateTime @updatedAt
+  id             String   @id @default(cuid())
+  email          String   @unique
+  hashedPassword String
+
+  // Perfil pessoal
+  nome           String
+  sobrenome      String
+  idade          Int
+  cidade         String
+  bio            String?
+  avatar         String?
+
+  // Elemento
+  elementoNato   String?
+  subbending     String?
+
+  // Controle
+  role           String   @default("USER")
+  isActive       Boolean  @default(true)
+  emailVerified  DateTime?
+  lastLoginAt    DateTime?
+  
+  // Progress & Retention
+  totalXp          Int @default(0)
+  level            Int @default(1)
+  streak           Int @default(0)
+  lastActivityAt   DateTime?
+
+  // Points
+  paiShoScore      Int @default(0)
+  paiShoWinsEasy   Int @default(0)
+  paiShoWinsMedium Int @default(0)
+  paiShoWinsHard   Int @default(0)
+  paiShoWinsMaster Int @default(0)
+  pergaminhosScore Int @default(0)
+  triviaScore      Int @default(0)
+  arenaScore       Int @default(0)
+
+  // Timestamps
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  // Relações
+  gameSessions   GameSession[]
+  triviaAttempts TriviaAttempt[]
+  ranking        ArenaRanking?
+  auditLogs      AuditLog[]
+  messages       ChatMessage[]
+}
+
+model ChatMessage {
+  id        String   @id @default(cuid())
+  content   String
+  nacao     String   @default("Global")
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+}
+
+model GameSession {
+  id          String   @id @default(cuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  gameType    String
+  score       Int      @default(0)
+  xpGained    Int      @default(0)
+  durationSec Int?
+  result      String?
+  metadata    String?
+  startedAt   DateTime @default(now())
+  finishedAt  DateTime?
+}
+
+model TriviaAttempt {
+  id           String   @id @default(cuid())
+  userId       String
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  questionId   String
+  questionText String
+  chosenAnswer String
+  correctAnswer String
+  isCorrect    Boolean
+  element      String?
+  xpGained     Int      @default(0)
+  answeredAt   DateTime @default(now())
+}
+
+model ArenaRanking {
+  id           String   @id @default(cuid())
+  userId       String   @unique
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  totalScore   Int      @default(0)
+  totalWins    Int      @default(0)
+  totalLosses  Int      @default(0)
+  totalGames   Int      @default(0)
+  winRate      Float    @default(0.0)
+  bestStreak   Int      @default(0)
+  currentStreak Int     @default(0)
+  rankTitle    String   @default("Novato")
+  updatedAt    DateTime @updatedAt
+}
+
+model AuditLog {
+  id        String   @id @default(cuid())
+  userId    String?
+  user      User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+  action    String
+  success   Boolean  @default(true)
+  ip        String?
+  userAgent String?
+  details   String?
+  createdAt DateTime @default(now())
 }

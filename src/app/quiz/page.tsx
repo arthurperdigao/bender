@@ -15,7 +15,122 @@ import { quizQuestions } from '@/lib/data/quizQuestions';
 import { QuizQuestionOption } from '@/lib/types/avatar';
 import { calculateFinalResult } from '@/lib/utils/calculateResult';
 import { quizResultContent } from '@/lib/data/quizResultContent';
-import { saveElemento } from '@/lib/actions/user';
+import { saveElemento, getUserStats } from '@/lib/actions/user';
+import { ResultID } from '@/lib/types/avatar';
+
+// ═══════════════════════════════════════════════════════════
+// TEMAS POR ELEMENTO
+// ═══════════════════════════════════════════════════════════
+const ELEMENT_COLORS: Record<string, { primary: string; glow: string }> = {
+  water: { primary: '#38bdf8', glow: 'rgba(56,189,248,0.25)' },
+  earth: { primary: '#22c55e', glow: 'rgba(34,197,94,0.25)' },
+  fire: { primary: '#f97316', glow: 'rgba(249,115,22,0.25)' },
+  air: { primary: '#fbbf24', glow: 'rgba(251,191,36,0.25)' },
+  none: { primary: '#a78bfa', glow: 'rgba(167,139,250,0.25)' },
+};
+
+// ═══════════════════════════════════════════════════════════
+// TELA DE ELEMENTO SELADO — para quem já fez o quiz
+// ═══════════════════════════════════════════════════════════
+const SealedScreen = ({ elementoNato, subbending }: { elementoNato: string; subbending: string | null }) => {
+  // Tenta mostrar o conteúdo do elemento ou do subbending
+  const displayId = (subbending as ResultID) ?? null;
+  const content = displayId ? quizResultContent[displayId] : null;
+  const elementColors = ELEMENT_COLORS[elementoNato] ?? ELEMENT_COLORS.none;
+  const colors = content?.colors ?? { primary: elementColors.primary, secondary: '#0d0f16', accent: elementColors.primary };
+  const icon = content?.icon ?? { water: '💧', earth: '⛰️', fire: '🔥', air: '🌪️', none: '☯' }[elementoNato] ?? '☯';
+  const title = content?.title ?? { water: 'Tribo da Água', earth: 'Reino da Terra', fire: 'Nação do Fogo', air: 'Nômades do Ar', none: 'Espírito Livre' }[elementoNato] ?? 'Guerreiro';
+  const quote = content?.quote ?? '"O destino não se repete. Ele apenas se aprofunda."';
+
+  return (
+    <motion.div
+      className="flex min-h-screen flex-col items-center justify-center p-8 text-center relative z-10"
+      initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 1 }}
+    >
+      {/* Glow de fundo */}
+      <motion.div className="absolute pointer-events-none"
+        style={{ width: 600, height: 600, background: `radial-gradient(circle, ${colors.primary}18 0%, transparent 70%)`, filter: 'blur(70px)' }}
+        animate={{ scale: [1, 1.1, 1], opacity: [0.5, 0.8, 0.5] }}
+        transition={{ duration: 5, repeat: Infinity, ease: 'easeInOut' }} />
+
+      {/* Ícone principal */}
+      <motion.div className="relative mb-8"
+        initial={{ scale: 0, opacity: 0 }}
+        animate={{ scale: 1, opacity: 1 }}
+        transition={{ type: 'spring', stiffness: 60, damping: 12, duration: 1.2 }}>
+        {[0, 1].map((i) => (
+          <motion.div key={i} className="absolute rounded-full border"
+            style={{ width: 160 + i * 40, height: 160 + i * 40, top: -(i * 20), left: -(i * 20), borderColor: `${colors.primary}${i === 0 ? '35' : '18'}` }}
+            animate={{ rotate: i === 0 ? 360 : -360 }}
+            transition={{ duration: 22 + i * 10, repeat: Infinity, ease: 'linear' }} />
+        ))}
+        <div className="relative w-[160px] h-[160px] rounded-full flex items-center justify-center"
+          style={{ background: `radial-gradient(circle, ${colors.primary}28 0%, ${colors.secondary} 70%)`, border: `2px solid ${colors.primary}50`, boxShadow: `0 0 60px ${colors.primary}35` }}>
+          <span className="text-7xl select-none">{icon}</span>
+        </div>
+      </motion.div>
+
+      {/* Badge selado */}
+      <motion.div className="mb-5 flex items-center gap-3 px-6 py-2 rounded-full border"
+        style={{ borderColor: `${colors.primary}40`, backgroundColor: `${colors.primary}10` }}
+        initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: 0.5 }}>
+        <span className="text-base">🔒</span>
+        <span className="text-xs uppercase tracking-[0.4em] font-bold" style={{ color: colors.primary }}>Elemento Selado</span>
+      </motion.div>
+
+      <motion.p className="mb-2 text-xs uppercase tracking-[0.3em] opacity-50" style={{ color: colors.accent }}
+        initial={{ opacity: 0 }} animate={{ opacity: 0.5 }} transition={{ delay: 0.6 }}>
+        Chamado Espiritual — Revelação Única
+      </motion.p>
+
+      <motion.h1 className="mb-5 text-4xl md:text-5xl font-bold"
+        style={{ color: colors.primary, textShadow: `0 0 30px ${colors.primary}50`, fontFamily: 'var(--font-cinzel), serif' }}
+        initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.4, duration: 1 }}>
+        {title}
+      </motion.h1>
+
+      <div className="w-16 h-px mx-auto mb-8 opacity-30" style={{ backgroundColor: colors.primary }} />
+
+      <motion.p className="mb-10 max-w-md text-base italic leading-relaxed font-lora"
+        style={{ color: colors.accent, opacity: 0.7 }}
+        initial={{ y: 12, opacity: 0 }} animate={{ y: 0, opacity: 0.7 }} transition={{ delay: 0.7 }}>
+        {quote}
+      </motion.p>
+
+      {/* Aviso principal — destaque total */}
+      <motion.div
+        className="mb-10 w-full max-w-md px-6 py-5 rounded-2xl text-center"
+        style={{ background: `linear-gradient(135deg, ${colors.primary}15, ${colors.primary}08)`, border: `1px solid ${colors.primary}35`, boxShadow: `0 0 30px ${colors.primary}15` }}
+        initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 1 }}>
+        <p className="text-sm font-bold uppercase tracking-wider mb-1" style={{ color: colors.primary }}>Seu caminho já foi revelado</p>
+        <p className="text-xs text-white/40 leading-relaxed">
+          O elemento espiritual é descoberto uma única vez. Sua essência não muda — ela se aprofunda.
+        </p>
+      </motion.div>
+
+      <motion.div className="flex flex-col sm:flex-row gap-4"
+        initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 1.4 }}>
+        {!subbending && (
+          <Link href="/quiz/subbending"
+            className="px-8 py-3 rounded-xl text-sm font-semibold transition-all duration-300"
+            style={{ border: `1px solid ${colors.primary}50`, color: colors.primary, background: `${colors.primary}12` }}>
+            Aprofundar a Jornada →
+          </Link>
+        )}
+        {subbending && (
+          <Link href="/quiz/subbending"
+            className="px-8 py-3 rounded-xl text-sm font-semibold transition-all duration-300"
+            style={{ border: `1px solid ${colors.primary}50`, color: colors.primary, background: `${colors.primary}12` }}>
+            Grimório da Essência →
+          </Link>
+        )}
+        <Link href="/" className="px-8 py-3 rounded-xl text-sm border border-white/10 text-white/40 hover:text-white/70 transition-all duration-300">
+          Retornar ao Portal
+        </Link>
+      </motion.div>
+    </motion.div>
+  );
+};
 
 // ═══════════════════════════════════════════════════════════
 // PARTÍCULAS ANIMADAS — Efeito de fundo dinâmico
@@ -589,50 +704,93 @@ const ResultScreen = () => {
 // ═══════════════════════════════════════════════════════════
 export default function QuizPage() {
   const { quizState, startQuiz } = useQuizStore();
+  const { data: session, status } = useSession();
+  const [existingElement, setExistingElement] = useState<string | null>(null);
+  const [existingSubbending, setExistingSubbending] = useState<string | null>(null);
+  const [checkingElement, setCheckingElement] = useState(true);
 
-  // Cor das partículas muda conforme o estado (Ouro Pergaminho ou Fogo no fim)
-  const particleColor = quizState === 'finished' ? '#ff6a42' : '#dcb670';
+  useEffect(() => {
+    async function checkElement() {
+      if (!session?.user) { setCheckingElement(false); return; }
+      const stats = await getUserStats();
+      setExistingElement(stats?.elementoNato ?? null);
+      setExistingSubbending(stats?.subbending ?? null);
+      setCheckingElement(false);
+    }
+    checkElement();
+  }, [session]);
+
+  const particleColor = existingElement
+    ? (ELEMENT_COLORS[existingElement]?.primary ?? '#dcb670')
+    : quizState === 'finished' ? '#ff6a42' : '#dcb670';
+
+  if (checkingElement) {
+    return (
+      <main className="min-h-screen flex items-center justify-center" style={{ background: '#0d0f16' }}>
+        <motion.div className="w-12 h-12 rounded-full border-2 border-[#dcb670]/30 border-t-[#dcb670]"
+          animate={{ rotate: 360 }} transition={{ duration: 1, repeat: Infinity, ease: 'linear' }} />
+      </main>
+    );
+  }
 
   return (
     <main
       className="min-h-screen relative overflow-hidden"
-      style={{
-        background: 'radial-gradient(circle at 50% 0%, #161a25 0%, #0d0f16 70%, #000000 100%)',
-      }}
+      style={{ background: 'radial-gradient(circle at 50% 0%, #161a25 0%, #0d0f16 70%, #000000 100%)' }}
     >
       <Particles color={particleColor} count={60} />
-
-      {/* Decoração Atmosférica no fundo */}
       <div className="absolute inset-0 z-0 bg-gradient-to-b from-[#161a25] via-transparent to-[#0d0f16] opacity-60 pointer-events-none" />
 
-      {/* Botão Home flutuante com estética Dark/Dourada */}
       <Link
         href="/"
-        className="fixed top-6 left-6 z-50 flex items-center gap-2 px-4 py-2 rounded-lg text-xs uppercase tracking-widest font-bold
-          bg-[#161a25]/60 border border-white/5 text-[#dcb670]/80 shadow-lg backdrop-blur-md
-          hover:text-[#dcb670] hover:bg-[#242a3c]/80 hover:border-[#dcb670]/30 hover:scale-105
-          transition-all duration-300"
+        className="fixed top-6 left-6 z-50 flex items-center gap-2 px-4 py-2 rounded-lg text-xs uppercase tracking-widest font-bold bg-[#161a25]/60 border border-white/5 text-[#dcb670]/80 shadow-lg backdrop-blur-md hover:text-[#dcb670] hover:bg-[#242a3c]/80 hover:border-[#dcb670]/30 hover:scale-105 transition-all duration-300"
       >
         ← Retornar
       </Link>
 
-      <AnimatePresence mode="wait">
-        {quizState === 'pending' && (
-          <motion.div key="start" exit={{ opacity: 0 }} transition={{ duration: 0.8 }}>
-            <StartScreen onStart={startQuiz} />
-          </motion.div>
-        )}
-        {quizState === 'active' && (
-          <motion.div key="quiz" exit={{ opacity: 0 }} transition={{ duration: 0.8 }} className="min-h-screen pt-20">
-            <QuestionScreen />
-          </motion.div>
-        )}
-        {quizState === 'finished' && (
-          <motion.div key="result" exit={{ opacity: 0 }} transition={{ duration: 0.8 }}>
-            <ResultScreen />
-          </motion.div>
-        )}
-      </AnimatePresence>
+      {/* BLOQUEIO OFFLINE */}
+      {status === 'unauthenticated' && (
+        <main className="min-h-screen flex items-center justify-center p-6 text-center relative z-20">
+          <div className="max-w-md p-8 rounded-3xl bg-white/[0.03] border border-white/10 backdrop-blur-md">
+            <div className="text-6xl mb-6 grayscale opacity-30">☯</div>
+            <h1 className="text-2xl font-bold text-white mb-4" style={{ fontFamily: 'var(--font-cinzel), serif' }}>
+              Chamado Restrito
+            </h1>
+            <p className="text-white/60 mb-8 leading-relaxed text-sm">
+              Os arquivos espirituais são selados para viajantes anônimos. Identifique-se para que sua jornada elemental seja registrada nos pergaminhos da história.
+            </p>
+            <Link href="/login" className="inline-block w-full py-4 rounded-xl bg-[#dcb670] text-[#1a1c24] font-bold hover:brightness-110 transition-all uppercase tracking-widest text-xs">
+              Entrar no Portal →
+            </Link>
+          </div>
+        </main>
+      )}
+
+      {/* Elemento já selado → mostra tela bloqueada */}
+      {status === 'authenticated' && existingElement && (
+        <SealedScreen elementoNato={existingElement} subbending={existingSubbending} />
+      )}
+
+      {/* Sem elemento → quiz normal */}
+      {status === 'authenticated' && !existingElement && (
+        <AnimatePresence mode="wait">
+          {quizState === 'pending' && (
+            <motion.div key="start" exit={{ opacity: 0 }} transition={{ duration: 0.8 }}>
+              <StartScreen onStart={startQuiz} />
+            </motion.div>
+          )}
+          {quizState === 'active' && (
+            <motion.div key="quiz" exit={{ opacity: 0 }} transition={{ duration: 0.8 }} className="min-h-screen pt-20">
+              <QuestionScreen />
+            </motion.div>
+          )}
+          {quizState === 'finished' && (
+            <motion.div key="result" exit={{ opacity: 0 }} transition={{ duration: 0.8 }}>
+              <ResultScreen />
+            </motion.div>
+          )}
+        </AnimatePresence>
+      )}
     </main>
   );
 }

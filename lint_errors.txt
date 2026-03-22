@@ -1,7 +1,0 @@
-C:\Users\Arthur Perdigao\Desktop\blender\avatar-platform\get_lint.js
-Line 1: A `require()` style import is forbidden.
-Line 2: A `require()` style import is forbidden.
-C:\Users\Arthur Perdigao\Desktop\blender\avatar-platform\src\app\login\page.tsx
-Line 16: 'searchParams' is assigned a value but never used.
-C:\Users\Arthur Perdigao\Desktop\blender\avatar-platform\src\lib\components\quiz\NarrativeStep.tsx
-Line 25: 'selectAnswer' is assigned a value but never used.

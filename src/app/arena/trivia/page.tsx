@@ -11,7 +11,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import Link from 'next/link';
 import { allTriviaQuestions } from '@/lib/types/triviaQuestions';
 import { TriviaQuestion } from '@/lib/types/trivia';
-import { saveTriviaScore } from '@/lib/actions/user';
+import { saveTriviaScore, getUserStats } from '@/lib/actions/user';
 
 type Difficulty = 'easy' | 'medium' | 'hard';
 type GamePhase = 'menu' | 'playing' | 'feedback' | 'results';
@@ -20,6 +20,14 @@ const DIFFICULTY_INFO: Record<Difficulty, { label: string; icon: string; color: 
     easy: { label: 'Fácil', icon: '🌱', color: '#22c55e', desc: 'Para novatos no mundo Avatar' },
     medium: { label: 'Médio', icon: '⚔️', color: '#fbbf24', desc: 'Para fãs dedicados' },
     hard: { label: 'Difícil', icon: '🔥', color: '#ef4444', desc: 'Para mestres do lore' },
+};
+
+const ELEMENT_THEMES: Record<string, { bgTop: string; bgBottom: string; accent: string; icon: string; title: string; xpName: string; quote: string }> = {
+    water: { bgTop: '#0a192f', bgBottom: '#020c1b', accent: '#5a9ec4', icon: '🌊', title: 'Oásis Espiritual', xpName: 'Fluxo de Chi', quote: 'A água é o elemento da mudança. As pessoas da Tribo da Água são capazes de se adaptar a muitas coisas.' },
+    earth: { bgTop: '#1a2e1a', bgBottom: '#0a140a', accent: '#8fa04a', icon: '⛰️', title: 'Cavernas de Cristal', xpName: 'Resiliência', quote: 'A terra é o elemento da substância. As pessoas do Reino da Terra são diversas e fortes, persistentes e duradouras.' },
+    fire: { bgTop: '#3a0f0f', bgBottom: '#1a0505', accent: '#cc4a2e', icon: '🔥', title: 'Guerreiros do Sol', xpName: 'Fogo Interior', quote: 'O fogo é o elemento do poder. As pessoas da Nação do Fogo têm o desejo e a vontade, e a energia para alcançar o que desejam.' },
+    air: { bgTop: '#2f271a', bgBottom: '#1a140a', accent: '#daa54e', icon: '🌪️', title: 'Templo do Ar', xpName: 'Liberdade', quote: 'O ar é o elemento da liberdade. O Povo do Ar se desprendia dos problemas mundanos e encontrou paz e liberdade.' },
+    none: { bgTop: '#1a182d', bgBottom: '#0a0a14', accent: '#a792ff', icon: '🦉', title: 'Biblioteca Ancestral', xpName: 'Favor de Wan Shi Tong', quote: 'O conhecimento verdadeiro é saber a extensão da própria ignorância.' },
 };
 
 // ═══════════════════════════════════════
@@ -49,55 +57,55 @@ const Particles = ({ color = '#a792ff' }: { color?: string }) => {
 // ═══════════════════════════════════════
 // TELA DE MENU
 // ═══════════════════════════════════════
-const MenuScreen = ({ onSelect }: { onSelect: (d: Difficulty) => void }) => (
+const MenuScreen = ({ onSelect, theme }: { onSelect: (d: Difficulty) => void; theme: typeof ELEMENT_THEMES['none'] }) => (
     <motion.div className="flex flex-col items-center justify-center text-center relative z-10"
         initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
 
-        <motion.div className="text-7xl mb-6"
+        <motion.div className="text-7xl mb-6 drop-shadow-2xl"
             initial={{ scale: 0 }} animate={{ scale: 1 }}
             transition={{ type: 'spring', stiffness: 80, delay: 0.2 }}>
-            📜
+            {theme.icon}
         </motion.div>
 
-        <motion.h1 className="mb-3 text-4xl md:text-5xl font-bold"
-            style={{ background: 'linear-gradient(135deg, #a792ff 0%, #fbbf24 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', filter: 'drop-shadow(0 0 20px rgba(167,146,255,0.3))' }}
+        <motion.h1 className="mb-3 text-4xl md:text-5xl font-bold font-serif uppercase tracking-widest"
+            style={{ color: theme.accent, filter: `drop-shadow(0 0 20px ${theme.accent}50)` }}
             initial={{ y: -20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.4 }}>
-            Trivia Avatar
+            {theme.title}
         </motion.h1>
 
-        <motion.p className="mb-2 text-xs uppercase tracking-[0.3em] opacity-40"
-            initial={{ opacity: 0 }} animate={{ opacity: 0.4 }} transition={{ delay: 0.6 }}>
-            Teste seu conhecimento
+        <motion.p className="mb-2 text-xs uppercase tracking-[0.3em] opacity-60 text-white"
+            initial={{ opacity: 0 }} animate={{ opacity: 0.6 }} transition={{ delay: 0.6 }}>
+            A Sabedoria do seu Elemento
         </motion.p>
 
-        <motion.p className="mb-10 max-w-sm text-sm italic opacity-50"
+        <motion.p className="mb-10 max-w-md text-sm italic opacity-50 px-4"
             initial={{ opacity: 0 }} animate={{ opacity: 0.5 }} transition={{ delay: 0.8 }}>
-            &ldquo;O conhecimento verdadeiro é saber a extensão da própria ignorância.&rdquo;
+            &ldquo;{theme.quote}&rdquo;
         </motion.p>
 
         <div className="flex flex-col gap-3 w-full max-w-sm mb-10">
             {(Object.entries(DIFFICULTY_INFO) as [Difficulty, typeof DIFFICULTY_INFO.easy][]).map(([key, info], i) => (
                 <motion.button key={key}
-                    className="group relative flex items-center gap-4 p-4 rounded-xl text-left transition-all duration-300"
-                    style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)' }}
+                    className="group relative flex items-center gap-4 p-4 rounded-xl text-left transition-all duration-300 backdrop-blur-md"
+                    style={{ background: 'rgba(0,0,0,0.4)', border: `1px solid ${theme.accent}30` }}
                     onClick={() => onSelect(key)}
                     initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 1 + i * 0.1 }}
-                    whileHover={{ x: 4 }} whileTap={{ scale: 0.98 }}>
+                    whileHover={{ x: 4, background: 'rgba(0,0,0,0.6)', borderColor: `${theme.accent}80` }} whileTap={{ scale: 0.98 }}>
                     <div className="absolute inset-0 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-500"
-                        style={{ boxShadow: `inset 0 0 20px ${info.color}10, 0 0 15px ${info.color}08` }} />
-                    <div className="absolute left-0 top-0 bottom-0 w-[2px] bg-white/10 group-hover:transition-colors duration-500"
-                        style={{ backgroundColor: 'rgba(255,255,255,0.1)' }} />
-                    <span className="text-2xl">{info.icon}</span>
+                        style={{ boxShadow: `inset 0 0 20px ${info.color}20, 0 0 15px ${theme.accent}20` }} />
+                    <div className="absolute left-0 top-0 bottom-0 w-[2px] opacity-50 group-hover:opacity-100 transition-all duration-500"
+                        style={{ backgroundColor: theme.accent }} />
+                    <span className="text-2xl drop-shadow-md">{info.icon}</span>
                     <div>
-                        <div className="text-sm font-semibold" style={{ color: info.color }}>{info.label}</div>
-                        <div className="text-xs opacity-40">{info.desc}</div>
+                        <div className="text-sm font-semibold uppercase tracking-wider" style={{ color: info.color }}>{info.label}</div>
+                        <div className="text-xs text-gray-400">{info.desc}</div>
                     </div>
                 </motion.button>
             ))}
         </div>
 
-        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 0.3 }} transition={{ delay: 1.5 }}>
-            <Link href="/" className="text-xs opacity-60 hover:opacity-100 transition-opacity">← Voltar ao Portal</Link>
+        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 0.4 }} transition={{ delay: 1.5 }}>
+            <Link href="/" className="text-xs text-white hover:text-white hover:opacity-100 transition-opacity uppercase tracking-widest">← Voltar ao Portal</Link>
         </motion.div>
     </motion.div>
 );
@@ -233,73 +241,72 @@ const GameScreen = ({
 // TELA DE RESULTADOS
 // ═══════════════════════════════════════
 const ResultsScreen = ({
-    score, total, difficulty, onRestart, onMenu, scoreSaved,
+    score, total, onRestart, onMenu, scoreSaved, theme
 }: {
-    score: number; total: number; difficulty: Difficulty;
-    onRestart: () => void; onMenu: () => void; scoreSaved: boolean;
+    score: number; total: number;
+    onRestart: () => void; onMenu: () => void; scoreSaved: boolean; theme: typeof ELEMENT_THEMES['none'];
 }) => {
     const percentage = Math.round((score / total) * 100);
-    const diffInfo = DIFFICULTY_INFO[difficulty];
 
     const getRank = () => {
-        if (percentage === 100) return { title: 'Mestre do Lore!', emoji: '👑', quote: 'Wan Shi Tong ficaria orgulhoso.' };
-        if (percentage >= 80) return { title: 'Membro do Lótus Branco', emoji: '🪷', quote: '"O verdadeiro poder vem do conhecimento."' };
-        if (percentage >= 60) return { title: 'Visitante da Biblioteca', emoji: '📚', quote: 'Bom conhecimento, continue estudando!' };
-        if (percentage >= 40) return { title: 'Aprendiz Curioso', emoji: '🌱', quote: 'Há muito mais para descobrir.' };
-        return { title: 'Precisa assistir de novo!', emoji: '📺', quote: '"Meu Cactus Juice! É a coisa mais gostosa!"' };
+        if (percentage === 100) return { title: 'Lenda Viva', emoji: '🌟', quote: 'A profunda conexão espiritual brilha em você.' };
+        if (percentage >= 80) return { title: 'Sábio da Tribo', emoji: theme.icon, quote: '"O verdadeiro poder vem da compreensão mútua."' };
+        if (percentage >= 60) return { title: 'Estudante Focado', emoji: '📖', quote: 'Sua jornada está indo muito bem.' };
+        if (percentage >= 40) return { title: 'Aprendiz Curioso', emoji: '🌱', quote: 'Há muito para descobrir nos quatro cantos do mundo.' };
+        return { title: 'Ainda em Treinamento', emoji: '🧘', quote: '"É hora de você olhar para dentro e começar a fazer as grandes perguntas!"' };
     };
 
     const rank = getRank();
 
     return (
-        <motion.div className="flex flex-col items-center justify-center text-center relative z-10 max-w-md"
+        <motion.div className="flex flex-col items-center justify-center text-center relative z-10 max-w-md backdrop-blur-xl bg-black/40 p-10 rounded-3xl border"
+            style={{ borderColor: `${theme.accent}30`, boxShadow: `0 20px 50px -20px ${theme.accent}20` }}
             initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
 
-            <motion.div className="text-7xl mb-4"
+            <motion.div className="text-7xl mb-4 drop-shadow-xl"
                 initial={{ scale: 0, rotate: -180 }} animate={{ scale: 1, rotate: 0 }}
                 transition={{ type: 'spring', stiffness: 80, delay: 0.3 }}>
                 {rank.emoji}
             </motion.div>
 
-            <motion.h2 className="text-3xl font-bold mb-2" style={{ color: diffInfo.color }}
+            <motion.h2 className="text-3xl font-bold mb-2 uppercase tracking-widest font-serif" style={{ color: theme.accent }}
                 initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.5 }}>
                 {rank.title}
             </motion.h2>
 
-            <motion.p className="text-sm italic opacity-50 mb-8"
+            <motion.p className="text-sm italic opacity-70 mb-8 text-gray-300"
                 initial={{ opacity: 0 }} animate={{ opacity: 0.5 }} transition={{ delay: 0.7 }}>
                 {rank.quote}
             </motion.p>
 
-            <motion.div className="flex items-center gap-6 mb-8"
+            <motion.div className="flex items-center gap-6 mb-8 bg-black/40 px-8 py-4 rounded-2xl border border-white/5"
                 initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.9 }}>
                 <div className="text-center">
-                    <div className="text-4xl font-bold" style={{ color: diffInfo.color }}>{score}</div>
-                    <div className="text-xs opacity-40">de {total}</div>
+                    <div className="text-5xl font-black" style={{ color: theme.accent }}>{score}</div>
+                    <div className="text-[10px] uppercase tracking-widest text-[#dcb670] mt-1">{theme.xpName}</div>
                 </div>
-                <div className="w-px h-12 bg-white/10" />
+                <div className="w-px h-16 bg-white/10" />
                 <div className="text-center">
                     <div className="text-4xl font-bold" style={{ color: percentage >= 70 ? '#22c55e' : percentage >= 40 ? '#fbbf24' : '#ef4444' }}>{percentage}%</div>
-                    <div className="text-xs opacity-40">acertos</div>
+                    <div className="text-xs opacity-50 uppercase tracking-widest mt-1 text-white">Domínio</div>
                 </div>
             </motion.div>
 
-            <motion.div className="flex gap-3"
+            <motion.div className="flex gap-4 w-full"
                 initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 1.2 }}>
-                <button onClick={onRestart} className="px-5 py-2.5 rounded-xl text-sm font-semibold"
-                    style={{ border: `1px solid ${diffInfo.color}50`, color: diffInfo.color, background: `${diffInfo.color}10` }}>
-                    Jogar Novamente
+                <button onClick={onRestart} className="flex-1 py-3 rounded-xl text-sm font-bold uppercase tracking-widest shadow-lg transition-transform hover:-translate-y-1"
+                    style={{ background: theme.accent, color: '#000' }}>
+                    Tentar Novamente
                 </button>
-                <button onClick={onMenu} className="px-5 py-2.5 rounded-xl text-sm border border-white/10 text-white/40 hover:text-white/60 transition-all">
-                    Trocar Dificuldade
+                <button onClick={onMenu} className="flex-1 py-3 rounded-xl text-sm font-bold uppercase tracking-widest border border-white/10 text-gray-300 hover:bg-white/5 transition-colors">
+                    Voltar ao Templo
                 </button>
             </motion.div>
 
-            <motion.div className="mt-8 flex flex-col items-center gap-2" initial={{ opacity: 0 }} animate={{ opacity: 0.3 }} transition={{ delay: 1.5 }}>
+            <motion.div className="mt-8 flex flex-col items-center gap-2" initial={{ opacity: 0 }} animate={{ opacity: 0.4 }} transition={{ delay: 1.5 }}>
                 {scoreSaved && (
-                    <span className="text-xs text-green-400 opacity-80">✓ Pontuação salva no seu perfil! <Link href="/perfil" className="underline">Ver perfil</Link></span>
+                    <span className="text-xs text-[#8fa04a] font-bold tracking-wider">✓ {theme.xpName} ABSORVIDO NO SEU ESPÍRITO</span>
                 )}
-                <Link href="/" className="text-xs opacity-60 hover:opacity-100 transition-opacity">← Voltar ao Portal</Link>
             </motion.div>
         </motion.div>
     );
@@ -313,6 +320,15 @@ export default function TriviaPage() {
     const [difficulty, setDifficulty] = useState<Difficulty>('easy');
     const [questions, setQuestions] = useState<TriviaQuestion[]>([]);
     const [results, setResults] = useState({ score: 0, total: 0 });
+    const [userElement, setUserElement] = useState<string>('none');
+
+    React.useEffect(() => {
+        getUserStats().then(stats => {
+            if (stats?.elementoNato && ELEMENT_THEMES[stats.elementoNato]) {
+                setUserElement(stats.elementoNato);
+            }
+        }).catch(err => console.error(err));
+    }, []);
 
     const handleSelect = useCallback((d: Difficulty) => {
         setDifficulty(d);
@@ -333,28 +349,32 @@ export default function TriviaPage() {
     }, [questions]);
 
     const diffInfo = DIFFICULTY_INFO[difficulty];
+    const theme = ELEMENT_THEMES[userElement] || ELEMENT_THEMES['none'];
 
     return (
-        <main className="flex min-h-screen w-full items-center justify-center p-4 relative overflow-hidden"
-            style={{ background: phase === 'menu' ? 'radial-gradient(ellipse at 50% 30%, #1a182d 0%, #0a0a14 100%)' : 'radial-gradient(ellipse at 50% 30%, #1a1520 0%, #0a0a14 100%)' }}>
+        <main className="flex min-h-screen w-full items-center justify-center p-4 relative overflow-hidden transition-colors duration-1000"
+            style={{ background: phase === 'menu' ? `radial-gradient(ellipse at 50% 30%, ${theme.bgTop} 0%, ${theme.bgBottom} 100%)` : `radial-gradient(ellipse at 50% 30%, #1a1520 0%, #0a0a14 100%)` }}>
 
-            <Particles color={phase === 'menu' ? '#a792ff' : diffInfo.color} />
+            <Particles color={phase === 'menu' ? theme.accent : diffInfo.color} />
 
-            {/* Botão Home flutuante */}
-            <Link
-                href="/"
-                className="fixed top-5 left-5 z-50 flex items-center gap-2 px-3 py-2 rounded-lg text-xs
-                  bg-white/[0.05] border border-white/[0.08] text-white/40
-                  hover:text-white/80 hover:bg-white/[0.1] hover:border-white/[0.15]
-                  transition-all duration-300 backdrop-blur-sm"
-            >
-                ← Início
-            </Link>
+            {/* Navegação Flutuante no Topo */}
+            <div className="fixed top-0 left-0 right-0 z-50 p-6 flex justify-between items-start pointer-events-none">
+                <Link href="/" className="pointer-events-auto flex items-center gap-2 px-4 py-2 rounded-full text-xs font-bold uppercase tracking-widest bg-black/40 border border-white/10 text-gray-300 hover:text-white hover:bg-white/10 transition-all backdrop-blur-md">
+                    ← Portal
+                </Link>
+                {phase === 'menu' && (
+                    <div className="flex flex-col items-end gap-1">
+                        <div className="px-4 py-2 rounded-full text-xs font-bold uppercase tracking-widest bg-black/40 border border-white/10 backdrop-blur-md" style={{ color: theme.accent }}>
+                            {theme.icon} Conectado: {theme.title}
+                        </div>
+                    </div>
+                )}
+            </div>
 
             <AnimatePresence mode="wait">
                 {phase === 'menu' && (
                     <motion.div key="menu" exit={{ opacity: 0 }} transition={{ duration: 0.5 }}>
-                        <MenuScreen onSelect={handleSelect} />
+                        <MenuScreen onSelect={handleSelect} theme={theme} />
                     </motion.div>
                 )}
                 {phase === 'playing' && (
@@ -365,8 +385,9 @@ export default function TriviaPage() {
                 )}
                 {phase === 'results' && (
                     <motion.div key="results" exit={{ opacity: 0 }} transition={{ duration: 0.5 }}>
-                        <ResultsScreen score={results.score} total={results.total} difficulty={difficulty}
-                            scoreSaved={true}
+                        <ResultsScreen score={results.score} total={results.total}
+                            scoreSaved={Boolean(results.score > 0)}
+                            theme={theme}
                             onRestart={() => handleSelect(difficulty)} onMenu={() => setPhase('menu')} />
                     </motion.div>
                 )}

@@ -8,17 +8,21 @@
 import { useSession, signOut } from "next-auth/react";
 import Link from "next/link";
 import { motion } from "framer-motion";
+import { WaterIcon, EarthIcon, FireIcon, AirIcon } from "./ui/ElementalIcons";
 
 // Mapeamento de elementos para emojis e cores
-const ELEMENT_MAP: Record<string, { emoji: string; color: string; label: string }> = {
-    water: { emoji: "🌊", color: "#5a9ec4", label: "Água" },
-    earth: { emoji: "⛰️", color: "#8fa04a", label: "Terra" },
-    fire: { emoji: "🔥", color: "#cc4a2e", label: "Fogo" },
-    air: { emoji: "🌪️", color: "#daa54e", label: "Ar" },
+const ELEMENT_MAP: Record<string, { Icon: React.FC<{ size?: number }>; color: string; label: string }> = {
+    water: { Icon: WaterIcon, color: "#5a9ec4", label: "Água" },
+    earth: { Icon: EarthIcon, color: "#8fa04a", label: "Terra" },
+    fire: { Icon: FireIcon, color: "#cc4a2e", label: "Fogo" },
+    air: { Icon: AirIcon, color: "#daa54e", label: "Ar" },
 };
+
+import { useCart } from "@/context/CartContext";
 
 export default function Navbar() {
     const { data: session, status } = useSession();
+    const { totalItems, setIsOpen } = useCart();
     const isLoading = status === "loading";
 
     // Nome do usuário (usa 'nome' customizado ou o 'name' padrão)
@@ -39,19 +43,61 @@ export default function Navbar() {
                 background: "linear-gradient(to bottom, rgba(13,15,22,0.95), rgba(13,15,22,0))",
             }}
         >
-            {/* Logo */}
-            <Link href="/" className="flex items-center gap-3 group">
-                <span className="text-xl group-hover:scale-110 transition-transform duration-300">☯</span>
-                <span
-                    className="text-sm font-bold tracking-[0.2em] uppercase text-white/80 group-hover:text-white transition-colors"
-                    style={{ fontFamily: "var(--font-cinzel), serif" }}
-                >
-                    Portal
-                </span>
+            {/* Logo — Marca Premium */}
+            <Link href="/" className="flex items-center gap-4 group">
+                <div className="relative">
+                    <span className="text-2xl group-hover:rotate-180 transition-transform duration-700 block drop-shadow-[0_0_8px_rgba(255,255,255,0.4)]">☯</span>
+                    <motion.div 
+                        animate={{ opacity: [0.2, 0.5, 0.2] }} 
+                        transition={{ duration: 3, repeat: Infinity }}
+                        className="absolute inset-0 bg-white blur-xl rounded-full -z-10" 
+                    />
+                </div>
+                <div className="flex flex-col leading-none">
+                    <span
+                        className="text-lg font-black tracking-[0.15em] uppercase text-white drop-shadow-sm"
+                        style={{ fontFamily: "var(--font-cinzel), serif" }}
+                    >
+                        Portal
+                    </span>
+                    <span
+                        className="text-[0.6rem] font-bold tracking-[0.4em] uppercase text-[#dcb670]"
+                        style={{ fontFamily: "var(--font-cinzel), serif" }}
+                    >
+                        Avatar
+                    </span>
+                </div>
             </Link>
+            
+            {/* Menu Central (Desktop) */}
+            <div className="hidden md:flex items-center gap-8">
+                <Link href="/" className="text-xs uppercase tracking-widest font-bold text-white/70 hover:text-[#dcb670] transition-colors">Início</Link>
+                <Link href="/biblioteca" className="text-xs uppercase tracking-widest font-bold text-white/70 hover:text-[#dcb670] transition-colors">Biblioteca</Link>
+                <Link href="/mapa" className="text-xs uppercase tracking-widest font-bold text-white/70 hover:text-[#dcb670] transition-colors">Mapa</Link>
+                <Link href="/loja" className="text-xs uppercase tracking-widest font-bold text-white/70 hover:text-[#dcb670] transition-colors">Loja</Link>
+            </div>
 
             {/* Área da sessão */}
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-6">
+                {/* Carrinho (Icone Premium) */}
+                <motion.button
+                    whileHover={{ scale: 1.1 }}
+                    whileTap={{ scale: 0.9 }}
+                    onClick={() => setIsOpen(true)}
+                    className="relative p-2 group"
+                >
+                    <span className="text-xl group-hover:text-[#dcb670] transition-colors">🛒</span>
+                    {totalItems > 0 && (
+                        <motion.span 
+                            initial={{ scale: 0 }}
+                            animate={{ scale: 1 }}
+                            className="absolute -top-1 -right-1 bg-white text-black text-[9px] font-black w-4 h-4 rounded-full flex items-center justify-center border border-[#dcb670]"
+                        >
+                            {totalItems}
+                        </motion.span>
+                    )}
+                </motion.button>
+
                 {isLoading ? (
                     // Skeleton loader enquanto carrega a sessão
                     <div className="flex gap-2">
@@ -70,8 +116,8 @@ export default function Navbar() {
                             >
                                 {/* Elemento (se tiver) */}
                                 {elementoInfo && (
-                                    <span className="text-sm" title={`Elemento: ${elementoInfo.label}`}>
-                                        {elementoInfo.emoji}
+                                    <span className="flex items-center" title={`Elemento: ${elementoInfo.label}`}>
+                                        <elementoInfo.Icon size={18} />
                                     </span>
                                 )}
                                 {/* Nome */}

@@ -34,7 +34,31 @@ export const { auth, handlers, signIn, signOut } = NextAuth({
                     user.hashedPassword
                 );
 
-                if (!senhaCorreta) return null;
+                if (!senhaCorreta) {
+                    await prisma.auditLog.create({
+                        data: {
+                            action: "LOGIN",
+                            success: false,
+                            details: JSON.stringify({ email: credentials.email, reason: "Invalid password" }),
+                        },
+                    }).catch(console.error);
+                    return null;
+                }
+
+                // Atualizar lastLoginAt e gerar AuditLog de sucesso
+                await prisma.user.update({
+                    where: { id: user.id },
+                    data: { lastLoginAt: new Date() },
+                }).catch(console.error);
+
+                await prisma.auditLog.create({
+                    data: {
+                        userId: user.id,
+                        action: "LOGIN",
+                        success: true,
+                        details: JSON.stringify({ email: user.email }),
+                    },
+                }).catch(console.error);
 
                 return {
                     id: user.id,

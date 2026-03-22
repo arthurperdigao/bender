@@ -9,7 +9,8 @@
 import React, { useState, useCallback, useEffect, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Link from 'next/link';
-import { getPaiShoStats, savePaiShoWin } from '@/lib/actions/user';
+import { useSession } from 'next-auth/react';
+import { getPaiShoStats, savePaiShoWin, savePaiShoLoss } from '@/lib/actions/user';
 
 // ═══════════════════════════════════════════════════
 // TIPOS
@@ -132,8 +133,8 @@ const DIFFICULTY_INFO: Record<Difficulty, { label: string; color: string; stars:
 // ═══════════════════════════════════════════════════
 // LÓGICA DO JOGO
 // ═══════════════════════════════════════════════════
-const BOARD_SIZE = 7;
-const PIECES_PER_PLAYER = 6;
+const BOARD_SIZE = 9;
+const PIECES_PER_PLAYER = 15;
 const CENTER = Math.floor(BOARD_SIZE / 2);
 
 function isPlayableCell(row: number, col: number): boolean {
@@ -153,25 +154,40 @@ function createEmptyBoard(): Cell[][] {
   return board;
 }
 
-function checkWinCondition(board: Cell[][], owner: 'player' | 'ai'): boolean {
+function calculateScore(board: Cell[][], owner: 'player' | 'ai'): number {
   const dirs = [[0, 1], [1, 0], [1, 1], [1, -1]];
+  let score = 0;
+  // Conjunto para evitar contar a mesma linha várias vezes
+  const countedLines = new Set<string>();
+
   for (let r = 0; r < BOARD_SIZE; r++) {
     for (let c = 0; c < BOARD_SIZE; c++) {
       if (board[r][c].owner !== owner) continue;
+      
       for (const [dr, dc] of dirs) {
         let count = 1;
-        for (let step = 1; step < 3; step++) {
+        const lineCoords = [`${r},${c}`];
+        
+        for (let step = 1; step < BOARD_SIZE; step++) {
           const nr = r + dr * step;
           const nc = c + dc * step;
           if (nr >= 0 && nr < BOARD_SIZE && nc >= 0 && nc < BOARD_SIZE && board[nr][nc].owner === owner) {
             count++;
+            lineCoords.push(`${nr},${nc}`);
           } else break;
         }
-        if (count >= 3) return true;
+        
+        if (count >= 3) {
+          const lineKey = lineCoords.sort().join('|');
+          if (!countedLines.has(lineKey)) {
+            countedLines.add(lineKey);
+            score += (count - 2) * 100; // 3 em linha = 100, 4 em linha = 200, etc.
+          }
+        }
       }
     }
   }
-  return false;
+  return score;
 }
 
 // ─── NOVA IA: Heurística avançada com pontuação por linha potencial ───────────
@@ -336,18 +352,18 @@ const BoardCell = ({
 }: {
   cell: Cell; onClick: () => void; isPlayerTurn: boolean; flower: string | null; opponentColor: string;
 }) => {
-  if (!cell.isPlayable) return <div className="w-12 h-12 md:w-14 md:h-14" />;
+  if (!cell.isPlayable) return <div className="w-10 h-10 md:w-12 md:h-12" />;
   const isEmpty = cell.owner === null;
   const isPlayer = cell.owner === 'player';
 
   return (
     <motion.button
-      className={`w-12 h-12 md:w-14 md:h-14 rounded-full flex items-center justify-center text-2xl md:text-3xl transition-all duration-300 ${isEmpty
+      className={`w-10 h-10 md:w-12 md:h-12 rounded-full flex items-center justify-center text-xl md:text-2xl transition-all duration-300 ${isEmpty
         ? isPlayerTurn
           ? 'bg-white/[0.04] border border-white/[0.08] hover:bg-white/[0.1] cursor-pointer'
           : 'bg-white/[0.04] border border-white/[0.06] cursor-not-allowed'
         : isPlayer
-          ? 'bg-emerald-900/30 border border-emerald-400/30 shadow-[0_0_12px_rgba(34,197,94,0.2)]'
+          ? 'bg-emerald-900/40 border border-emerald-400/40 shadow-[0_0_12px_rgba(34,197,94,0.3)]'
           : 'border shadow-[0_0_12px_rgba(0,0,0,0.3)]'
         }`}
       style={!isEmpty && !isPlayer ? {
@@ -379,7 +395,82 @@ const BoardCell = ({
 // ═══════════════════════════════════════════════════
 // TELA 1: MENU INICIAL
 // ═══════════════════════════════════════════════════
-const MenuScreen = ({ onSelectOpponent }: { onSelectOpponent: () => void }) => (
+const RulesModal = ({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) => (
+  <AnimatePresence>
+    {isOpen && (
+      <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+        <motion.div 
+          initial={{ scale: 0.9, opacity: 0, y: 20 }}
+          animate={{ scale: 1, opacity: 1, y: 0 }}
+          exit={{ scale: 0.9, opacity: 0, y: 20 }}
+          className="relative max-w-2xl w-full bg-[#1a1c24] border border-[#dcb670]/30 rounded-3xl p-8 overflow-y-auto max-h-[85vh] shadow-[0_0_50px_rgba(0,0,0,0.5)]"
+        >
+          {/* Botão Fechar */}
+          <button onClick={onClose} className="absolute top-6 right-6 text-white/40 hover:text-white transition-colors">
+            ✕
+          </button>
+
+          <h3 className="text-3xl font-bold text-[#dcb670] mb-6 flex items-center gap-3"
+            style={{ fontFamily: 'var(--font-cinzel), serif' }}>
+            📜 O Caminho da Harmonia (9x9)
+          </h3>
+
+          <div className="space-y-6 text-white/80 leading-relaxed">
+            <section>
+              <h4 className="text-lg font-bold text-white mb-2">O Objetivo: Pontuação</h4>
+              <p>Diferente de jogos simples, o Pai Sho de alto nível é decidido por **Pontos de Harmonia**. O objetivo é acumular a maior pontuação criando múltiplos alinhamentos antes das peças acabarem.</p>
+            </section>
+
+            <section className="p-4 rounded-xl bg-white/5 border border-white/10 space-y-3">
+              <h4 className="text-sm font-bold text-[#dcb670] uppercase tracking-wider">Tabela de Pontos:</h4>
+              <div className="flex justify-between text-sm">
+                <span>3 Flores em Linha</span>
+                <span className="font-bold text-white">100 pts</span>
+              </div>
+              <div className="flex justify-between text-sm">
+                <span>4 Flores em Linha</span>
+                <span className="font-bold text-white">200 pts</span>
+              </div>
+              <div className="flex justify-between text-sm">
+                <span>5 Flores em Linha</span>
+                <span className="font-bold text-white">300 pts</span>
+              </div>
+            </section>
+
+            <section>
+              <h4 className="text-lg font-bold text-white mb-2">Resistência Estratégica</h4>
+              <p>Cada jogador possui **15 peças**. O jogo só termina quando todos os espaços forem preenchidos ou as peças esgotarem. Um mestre sabe que perder um alinhamento cedo não significa perder a partida.</p>
+            </section>
+
+            <section className="grid grid-cols-2 gap-3">
+              <div className="p-3 rounded-lg bg-black/20 border border-white/5 text-[10px]">
+                <span className="text-lg block mb-1">🪷 Lótus</span>
+                A peça central da sua estratégia.
+              </div>
+              <div className="p-3 rounded-lg bg-black/20 border border-white/5 text-[10px]">
+                <span className="text-lg block mb-1">🌸 Jasmim</span>
+                Ideal para pontes de harmonia.
+              </div>
+            </section>
+
+            <section className="p-4 rounded-xl bg-[#dcb670]/10 border border-[#dcb670]/20 text-center">
+              <p className="text-sm italic">&quot;A verdadeira vitória não é o fim do caminho, mas a harmonia de cada passo dado.&quot;</p>
+            </section>
+          </div>
+
+          <button 
+            onClick={onClose}
+            className="w-full mt-8 py-3 rounded-xl bg-[#dcb670] text-[#1a1c24] font-bold hover:brightness-110 transition-all uppercase tracking-widest text-sm"
+          >
+            Entendi, vamos jogar
+          </button>
+        </motion.div>
+      </div>
+    )}
+  </AnimatePresence>
+);
+
+const MenuScreen = ({ onSelectOpponent, onShowRules }: { onSelectOpponent: () => void; onShowRules: () => void }) => (
   <motion.div className="flex flex-col items-center justify-center text-center relative z-10"
     initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.8 }}>
 
@@ -410,28 +501,31 @@ const MenuScreen = ({ onSelectOpponent }: { onSelectOpponent: () => void }) => (
       &ldquo;O Pai Sho não é apenas um jogo. É um modo de vida.&rdquo; — Iroh
     </motion.p>
 
-    <motion.div className="mb-6 max-w-sm text-xs opacity-30 leading-relaxed space-y-1"
-      initial={{ opacity: 0 }} animate={{ opacity: 0.3 }} transition={{ delay: 1.3 }}>
-      <p>🪷 Suas flores &nbsp;&nbsp;vs&nbsp;&nbsp; flores do adversário</p>
-      <p>Alinhe 3 flores para vencer</p>
+    <motion.div className="flex flex-col sm:flex-row gap-4"
+      initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 1.3 }}>
+      <motion.button
+        className="group relative px-10 py-4 text-lg font-semibold rounded-xl overflow-hidden"
+        style={{
+          background: 'linear-gradient(135deg, rgba(34,197,94,0.15) 0%, rgba(251,191,36,0.1) 100%)',
+          border: '1px solid rgba(34,197,94,0.3)', color: '#d1fae5',
+          fontFamily: 'var(--font-cinzel), serif',
+        }}
+        onClick={onSelectOpponent}
+        whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }}>
+        <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500"
+          style={{ background: 'radial-gradient(circle at center, rgba(34,197,94,0.15) 0%, transparent 70%)' }} />
+        <span className="relative z-10">Jogar Agora →</span>
+      </motion.button>
+
+      <motion.button
+        className="px-10 py-4 text-lg font-semibold rounded-xl border border-white/10 text-white/60 hover:text-white hover:bg-white/5 transition-all"
+        style={{ fontFamily: 'var(--font-cinzel), serif' }}
+        onClick={onShowRules}>
+        Ver Regras 📜
+      </motion.button>
     </motion.div>
 
-    <motion.button
-      className="group relative px-10 py-4 text-lg font-semibold rounded-xl overflow-hidden"
-      style={{
-        background: 'linear-gradient(135deg, rgba(34,197,94,0.15) 0%, rgba(251,191,36,0.1) 100%)',
-        border: '1px solid rgba(34,197,94,0.3)', color: '#d1fae5',
-        fontFamily: 'var(--font-cinzel), serif',
-      }}
-      onClick={onSelectOpponent}
-      whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }}
-      initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 1.6 }}>
-      <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500"
-        style={{ background: 'radial-gradient(circle at center, rgba(34,197,94,0.15) 0%, transparent 70%)' }} />
-      <span className="relative z-10">Escolher Adversário →</span>
-    </motion.button>
-
-    <motion.div className="mt-10" initial={{ opacity: 0 }} animate={{ opacity: 0.3 }} transition={{ delay: 2.0 }}>
+    <motion.div className="mt-10" initial={{ opacity: 0 }} animate={{ opacity: 0.3 }} transition={{ delay: 1.8 }}>
       <Link href="/" className="text-xs opacity-60 hover:opacity-100 transition-opacity">← Voltar ao Portal</Link>
     </motion.div>
   </motion.div>
@@ -443,11 +537,12 @@ const MenuScreen = ({ onSelectOpponent }: { onSelectOpponent: () => void }) => (
 type PaiShoStats = { easy: number; medium: number; hard: number; master: number; total: number } | null;
 
 const OpponentSelectScreen = ({
-  onSelect, onBack, stats,
+  onSelect, onBack, stats, onShowRules,
 }: {
   onSelect: (opponent: Opponent) => void;
   onBack: () => void;
   stats: PaiShoStats;
+  onShowRules: () => void;
 }) => {
   const [hovered, setHovered] = useState<string | null>(null);
 
@@ -564,11 +659,17 @@ const OpponentSelectScreen = ({
         )}
       </AnimatePresence>
 
-      <motion.button onClick={onBack}
-        className="text-xs opacity-40 hover:opacity-80 transition-opacity"
-        initial={{ opacity: 0 }} animate={{ opacity: 0.4 }}>
-        ← Voltar
-      </motion.button>
+      <div className="flex justify-between items-center mt-6">
+        <motion.button onClick={onBack}
+          className="text-xs opacity-40 hover:opacity-80 transition-opacity"
+          initial={{ opacity: 0 }} animate={{ opacity: 0.4 }}>
+          ← Voltar
+        </motion.button>
+
+        <button onClick={onShowRules} className="text-xs text-[#dcb670] opacity-60 hover:opacity-100 transition-all font-bold">
+          Dúvida nas Regras? 📜
+        </button>
+      </div>
     </motion.div>
   );
 };
@@ -581,6 +682,8 @@ interface GameStore {
   currentTurn: 'player' | 'ai';
   playerPieces: number;
   aiPieces: number;
+  playerScore: number;
+  aiScore: number;
   winner: Owner;
   message: string;
 }
@@ -600,14 +703,16 @@ const GameScreen = ({
   onCellClick,
   onRestart,
   onMenu,
+  onShowRules,
 }: {
   store: GameStore;
   opponent: Opponent;
   onCellClick: (row: number, col: number) => void;
   onRestart: () => void;
   onMenu: () => void;
+  onShowRules: () => void;
 }) => {
-  const { board, currentTurn, playerPieces, aiPieces, winner, message } = store;
+  const { board, currentTurn, playerPieces, aiPieces, playerScore, aiScore, winner, message } = store;
   const isPlayerTurn = currentTurn === 'player';
 
   // flowerMap é reiniciado a cada novo gameKey (key força remontagem)
@@ -637,12 +742,14 @@ const GameScreen = ({
       {/* Header */}
       <div className="flex items-center justify-between w-full mb-6 px-4">
         {/* Jogador */}
-        <div className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-all duration-300 ${isPlayerTurn ? 'bg-emerald-900/30 border border-emerald-400/30' : 'opacity-40'
-          }`}>
-          <span className="text-xl">🪷</span>
-          <div>
+        <div className={`flex flex-col items-center gap-2 px-4 py-2 rounded-lg transition-all duration-300 ${isPlayerTurn ? 'bg-emerald-900/30 border border-emerald-400/30 shadow-[0_0_15px_rgba(34,197,94,0.1)]' : 'opacity-40'}`}>
+          <div className="flex items-center gap-2">
+            <span className="text-xl">🪷</span>
             <div className="text-xs opacity-60">Você</div>
-            <div className="text-sm font-semibold text-emerald-300">{playerPieces} peças</div>
+          </div>
+          <div className="flex gap-4">
+            <div className="text-[10px] uppercase font-bold text-emerald-400/70">{playerPieces} peças</div>
+            <div className="text-sm font-black text-emerald-300">{playerScore} pts</div>
           </div>
         </div>
 
@@ -658,17 +765,20 @@ const GameScreen = ({
         </motion.div>
 
         {/* IA */}
-        <div className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-all duration-300 ${currentTurn === 'ai' ? 'border' : 'opacity-40'
-          }`}
+        <div className={`flex flex-col items-center gap-2 px-4 py-2 rounded-lg transition-all duration-300 ${currentTurn === 'ai' ? 'border' : 'opacity-40'}`}
           style={currentTurn === 'ai' ? {
             backgroundColor: `${opponent.color}18`,
             borderColor: `${opponent.color}50`,
+            boxShadow: `0 0 15px ${opponent.color}15`,
           } : {}}>
-          <div className="text-right">
+          <div className="flex items-center gap-2">
             <div className="text-xs opacity-60">{opponent.name}</div>
-            <div className="text-sm font-semibold" style={{ color: opponent.color }}>{aiPieces} peças</div>
+            <span className="text-xl">{opponent.emoji}</span>
           </div>
-          <span className="text-xl">{opponent.emoji}</span>
+          <div className="flex gap-4">
+            <div className="text-sm font-black" style={{ color: opponent.color }}>{aiScore} pts</div>
+            <div className="text-[10px] uppercase font-bold opacity-60">{aiPieces} peças</div>
+          </div>
         </div>
       </div>
 
@@ -708,25 +818,31 @@ const GameScreen = ({
       </AnimatePresence>
 
       {/* Ações — sempre mostra Desistir durante o jogo, e Jogar Novamente no fim */}
-      <motion.div className="mt-6 flex gap-3" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.5 }}>
-        {(winner !== null || playerPieces === 0) ? (
-          <>
-            <button onClick={onRestart}
-              className="px-5 py-2.5 rounded-xl text-sm font-semibold transition-all duration-300"
-              style={{ border: '1px solid rgba(34,197,94,0.4)', color: '#86efac', background: 'rgba(34,197,94,0.08)' }}>
-              Jogar Novamente
-            </button>
+      <motion.div className="mt-6 flex flex-col items-center gap-4" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.5 }}>
+        <div className="flex gap-3">
+          {(winner !== null || playerPieces === 0) ? (
+            <>
+              <button onClick={onRestart}
+                className="px-5 py-2.5 rounded-xl text-sm font-semibold transition-all duration-300"
+                style={{ border: '1px solid rgba(34,197,94,0.4)', color: '#86efac', background: 'rgba(34,197,94,0.08)' }}>
+                Jogar Novamente
+              </button>
+              <button onClick={onMenu}
+                className="px-5 py-2.5 rounded-xl text-sm border border-white/10 text-white/40 hover:text-white/60 transition-all">
+                Trocar Adversário
+              </button>
+            </>
+          ) : (
             <button onClick={onMenu}
-              className="px-5 py-2.5 rounded-xl text-sm border border-white/10 text-white/40 hover:text-white/60 transition-all">
-              Trocar Adversário
+              className="px-5 py-2.5 rounded-xl text-sm border border-white/10 text-white/30 hover:text-white/50 transition-all">
+              Desistir
             </button>
-          </>
-        ) : (
-          <button onClick={onMenu}
-            className="px-5 py-2.5 rounded-xl text-sm border border-white/10 text-white/30 hover:text-white/50 transition-all">
-            Desistir
-          </button>
-        )}
+          )}
+        </div>
+        
+        <button onClick={onShowRules} className="text-[10px] uppercase tracking-widest text-[#dcb670] opacity-40 hover:opacity-100 transition-all font-bold">
+          Ver Tutorial das Flores 📜
+        </button>
       </motion.div>
 
       {/* Dica do adversário */}
@@ -742,10 +858,32 @@ const GameScreen = ({
 // PÁGINA PRINCIPAL
 // ═══════════════════════════════════════════════════
 export default function PaiShoPage() {
+  const { data: session, status } = useSession();
   const [phase, setPhase] = useState<GamePhase>('menu');
   const [selectedOpponent, setSelectedOpponent] = useState<Opponent | null>(null);
   const [gameKey, setGameKey] = useState(0);
   const [paiShoStats, setPaiShoStats] = useState<PaiShoStats>(null);
+  const [isRulesOpen, setIsRulesOpen] = useState(false);
+
+  // Bloqueio Offline
+  if (status === 'unauthenticated') {
+    return (
+      <main className="min-h-screen bg-[#0d0f16] flex items-center justify-center p-6 text-center">
+        <div className="max-w-md p-8 rounded-3xl bg-white/[0.03] border border-white/10 backdrop-blur-md">
+          <div className="text-6xl mb-6 grayscale opacity-50">🪷</div>
+          <h1 className="text-2xl font-bold text-white mb-4" style={{ fontFamily: 'var(--font-cinzel), serif' }}>
+            Arena Sagrada
+          </h1>
+          <p className="text-white/60 mb-8 leading-relaxed">
+            Somente os dobradores registrados podem treinar na Arena. Suas vitórias e derrotas precisam ser lembradas pelo espírito da árvore.
+          </p>
+          <Link href="/login" className="inline-block w-full py-4 rounded-xl bg-[#dcb670] text-[#1a1c24] font-bold hover:brightness-110 transition-all">
+            Identificar-se agora
+          </Link>
+        </div>
+      </main>
+    );
+  }
 
   // Busca estatísticas quando entra na tela de seleção
   useEffect(() => {
@@ -759,8 +897,10 @@ export default function PaiShoPage() {
     currentTurn: 'player',
     playerPieces: PIECES_PER_PLAYER,
     aiPieces: PIECES_PER_PLAYER,
+    playerScore: 0,
+    aiScore: 0,
     winner: null,
-    message: 'Sua vez — coloque uma flor',
+    message: 'Sua vez — crie harmonias',
   });
 
   const startGame = useCallback(() => {
@@ -771,8 +911,10 @@ export default function PaiShoPage() {
       currentTurn: 'player',
       playerPieces: PIECES_PER_PLAYER,
       aiPieces: PIECES_PER_PLAYER,
+      playerScore: 0,
+      aiScore: 0,
       winner: null,
-      message: 'Sua vez — coloque uma flor',
+      message: 'Sua vez — crie harmonias',
     });
     setGameKey(k => k + 1); // Força remontagem/reset do flowerMap no GameScreen
     setPhase('playing');
@@ -800,25 +942,31 @@ export default function PaiShoPage() {
       const newBoard = prev.board.map(r => r.map(c => ({ ...c })));
       newBoard[row][col].owner = 'player';
       const newPlayerPieces = prev.playerPieces - 1;
+      const newPlayerScore = calculateScore(newBoard, 'player');
 
-      if (checkWinCondition(newBoard, 'player')) {
-        // Salva vitória no banco (silencioso se não logado)
-        if (selectedOpponent) savePaiShoWin(selectedOpponent.difficulty).catch(() => { });
+      // Se ambos ficaram sem peças, encerra e decide o vencedor
+      if (newPlayerPieces === 0 && prev.aiPieces === 0) {
+        const finalAiScore = calculateScore(newBoard, 'ai');
+        const winner = newPlayerScore > finalAiScore ? 'player' : (finalAiScore > newPlayerScore ? 'ai' : null);
+        
+        if (winner === 'player' && selectedOpponent) {
+          savePaiShoWin(selectedOpponent.difficulty).catch(() => { });
+        } else if (winner === 'ai' && selectedOpponent) {
+          savePaiShoLoss(selectedOpponent.difficulty).catch(() => { });
+        }
+
         return {
           ...prev, board: newBoard, playerPieces: newPlayerPieces,
-          winner: 'player', message: '🎉 Você venceu! Parabéns, mestre!',
-        };
-      }
-
-      if (prev.aiPieces <= 0) {
-        return {
-          ...prev, board: newBoard, playerPieces: newPlayerPieces,
-          winner: 'player', message: 'Jogo encerrado!',
+          playerScore: newPlayerScore, aiScore: finalAiScore,
+          winner: winner || null, 
+          message: winner === 'player' ? `🎉 Vitória! ${newPlayerScore} vs ${finalAiScore}` : 
+                   winner === 'ai' ? `🏮 Derrota! ${newPlayerScore} vs ${finalAiScore}` : 'Empate!',
         };
       }
 
       return {
         ...prev, board: newBoard, playerPieces: newPlayerPieces,
+        playerScore: newPlayerScore,
         currentTurn: 'ai',
         message: `${selectedOpponent?.name ?? 'IA'} está pensando...`,
       };
@@ -845,25 +993,31 @@ export default function PaiShoPage() {
         const newBoard = prev.board.map(r => r.map(c => ({ ...c })));
         newBoard[move.row][move.col].owner = 'ai';
         const newAiPieces = prev.aiPieces - 1;
+        const newAiScore = calculateScore(newBoard, 'ai');
 
-        if (checkWinCondition(newBoard, 'ai')) {
+        if (newAiPieces === 0 && prev.playerPieces === 0) {
+          const finalPlayerScore = calculateScore(newBoard, 'player');
+          const winner = finalPlayerScore > newAiScore ? 'player' : (newAiScore > finalPlayerScore ? 'ai' : null);
+          
+          if (winner === 'player' && selectedOpponent) {
+            savePaiShoWin(selectedOpponent.difficulty).catch(() => { });
+          } else if (winner === 'ai' && selectedOpponent) {
+            savePaiShoLoss(selectedOpponent.difficulty).catch(() => { });
+          }
+
           return {
             ...prev, board: newBoard, aiPieces: newAiPieces,
-            winner: 'ai',
-            message: `🏮 ${selectedOpponent.name} venceu! "${selectedOpponent.quote.slice(1, 40)}..."`,
-          };
-        }
-
-        if (newAiPieces <= 0 && prev.playerPieces <= 0) {
-          return {
-            ...prev, board: newBoard, aiPieces: newAiPieces,
-            winner: 'player', message: 'Empate! Uma partida digna do Lótus Branco.',
+            playerScore: finalPlayerScore, aiScore: newAiScore,
+            winner: winner || null,
+            message: winner === 'player' ? `🎉 Vitória! ${finalPlayerScore} vs ${newAiScore}` : 
+                     winner === 'ai' ? `🏮 ${selectedOpponent.name} venceu! ${finalPlayerScore} vs ${newAiScore}` : 'Empate!',
           };
         }
 
         return {
           ...prev, board: newBoard, aiPieces: newAiPieces,
-          currentTurn: 'player', message: 'Sua vez — coloque uma flor',
+          aiScore: newAiScore,
+          currentTurn: 'player', message: 'Sua vez — crie harmonias',
         };
       });
     }, delay);
@@ -879,6 +1033,9 @@ export default function PaiShoPage() {
 
       <Particles color={particleColor} />
 
+      {/* MODAL DE REGRAS FIGURADO COMO UM PERGAMINHO */}
+      <RulesModal isOpen={isRulesOpen} onClose={() => setIsRulesOpen(false)} />
+
       {/* Botão Home */}
       <Link href="/"
         className="fixed top-5 left-5 z-50 flex items-center gap-2 px-3 py-2 rounded-lg text-xs
@@ -891,7 +1048,7 @@ export default function PaiShoPage() {
       <AnimatePresence mode="wait">
         {phase === 'menu' && (
           <motion.div key="menu" exit={{ opacity: 0, x: -30 }} transition={{ duration: 0.3 }}>
-            <MenuScreen onSelectOpponent={() => setPhase('opponent_select')} />
+            <MenuScreen onSelectOpponent={() => setPhase('opponent_select')} onShowRules={() => setIsRulesOpen(true)} />
           </motion.div>
         )}
 
@@ -901,13 +1058,13 @@ export default function PaiShoPage() {
               onSelect={handleOpponentSelect}
               onBack={() => setPhase('menu')}
               stats={paiShoStats}
+              onShowRules={() => setIsRulesOpen(true)}
             />
           </motion.div>
         )}
 
         {phase === 'playing' && selectedOpponent && (
           <motion.div key={`game-${gameKey}`} exit={{ opacity: 0 }} transition={{ duration: 0.3 }} className="w-full flex justify-center">
-            {/* key={gameKey} força remontagem do GameScreen a cada novo jogo — reseta flowerMap */}
             <GameScreen
               key={gameKey}
               store={store}
@@ -915,6 +1072,7 @@ export default function PaiShoPage() {
               onCellClick={handleCellClick}
               onRestart={handleRestart}
               onMenu={handleMenu}
+              onShowRules={() => setIsRulesOpen(true)}
             />
           </motion.div>
         )}

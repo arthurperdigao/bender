@@ -1,100 +1,34 @@
 /* src/app/globals.css */
-/* Tailwind v4 import */
 @import 'tailwindcss';
 
-/* 1. Definição das Fontes Temáticas (ex: Herculanum)
-@font-face {
-  font-family: 'Herculanum';
-  src: url('/assets/fonts/herculanum.ttf') format('truetype');
-  font-weight: normal;
-  font-style: normal;
-}
-*/
-
-/* 2. Variáveis de Tema Raiz (Padrão: Mundo Espiritual) */
 :root {
-  --font-themed: 'Herculanum', serif; /* Nossa fonte temática */
-  --color-text: #e0dcd1; /* Texto cor de pergaminho */
-  --color-bg: #1a182d;  /* Fundo escuro, espiritual */
-  --color-primary: #a792ff; /* Roxo espiritual */
-  --color-border: #5a5275;
-  --texture-bg: url('/assets/images/ui/spiritual_mist_bg.png');
+  --font-themed: 'var(--font-cinzel)', serif;
+  --color-text: #e0dcd1;
+  --color-bg: #0b0e14;
+  --color-primary: #dcb670;
+  --color-border: rgba(255,255,255,0.1);
+  --texture-bg: none;
 }
 
-/* 3. Definições de Tema por Nação (A MÁGICA) */
-/* Quando o quiz terminar, aplicaremos data-theme="..." no <body> */
-
-body[data-theme='fire'] {
-  --color-text: #fde8c9;
-  --color-bg: #2c1311;
-  --color-primary: #ff4800; /* Laranja/Vermelho Fogo */
-  --color-border: #8b2800;
-  --texture-bg: url('/assets/images/ui/fire_ash_bg.png');
-}
-
-body[data-theme='water'] {
-  --color-text: #e6f8ff;
-  --color-bg: #0f2340;
-  --color-primary: #00b8ff; /* Azul Gelo */
-  --color-border: #3c6a9e;
-  --texture-bg: url('/assets/images/ui/water_ice_bg.jpg');
-}
-
-body[data-theme='earth'] {
-  --color-text: #e8f0d8;
-  --color-bg: #2a2d1a;
-  --color-primary: #009e25; /* Verde Jade */
-  --color-border: #5a633f;
-  --texture-bg: url('/assets/images/ui/earth_stone_bg.jpg');
-}
-
-body[data-theme='air'] {
-  --color-text: #4d3a2a;
-  --color-bg: #f7e9c8;
-  --color-primary: #ff9900; /* Laranja Nômade */
-  --color-border: #b89a6c;
-  --texture-bg: url('/assets/images/ui/air_scroll_bg.jpg');
-}
-
-body[data-theme='republic'] {
-  --color-text: #d4d0c8;
-  --color-bg: #303236;
-  --color-primary: #7d9e9e; /* Verde Metálico/Bronze */
-  --color-border: #565d5d;
-  --texture-bg: url('/assets/images/ui/republic_metal_bg.png');
-}
-
-
-/* 4. Estilização Base */
 body {
-  background-color: var(--color-bg);
-  background-image: var(--texture-bg);
-  color: var(--color-text);
-  font-family: var(--font-themed);
-  transition: background-color 1.5s ease, color 1.5s ease;
+  background-color: #0b0e14;
+  color: #ffffff;
+  font-family: var(--font-lora), serif;
+  transition: background-color 0.5s ease;
   overflow-x: hidden;
 }
 
-/* 5. Estilos de Componentes Temáticos (ex: Botão) */
-.thematic-button {
-  font-family: var(--font-themed);
-  font-size: 1.25rem;
-  padding: 0.75rem 1.5rem;
-  background-color: transparent;
-  border: 2px solid var(--color-border);
-  color: var(--color-text);
-  text-shadow: 0 0 5px var(--color-primary);
-  transition: all 0.3s ease;
-  cursor: pointer;
-  
-  /* Textura de pedra/metal */
-  background-image: url('/assets/images/ui/button_texture.png');
-  box-shadow: 0 4px 10px rgba(0,0,0,0.4);
-}
+/* Theme overrides for nations */
+body[data-theme='fire'] { --color-primary: #ff4800; }
+body[data-theme='water'] { --color-primary: #00b8ff; }
+body[data-theme='earth'] { --color-primary: #009e25; }
+body[data-theme='air'] { --color-primary: #ff9900; }
 
-.thematic-button:hover {
-  background-color: var(--color-primary);
-  color: var(--color-bg);
-  border-color: var(--color-primary);
-  box-shadow: 0 0 20px var(--color-primary);
-}
+.font-cinzel { font-family: var(--font-cinzel), serif; }
+.font-lora { font-family: var(--font-lora), serif; }
+
+/* Custom Scrollbar */
+::-webkit-scrollbar { width: 8px; }
+::-webkit-scrollbar-track { background: #0b0e14; }
+::-webkit-scrollbar-thumb { background: #1a1f2e; border-radius: 10px; }
+::-webkit-scrollbar-thumb:hover { background: #dcb670; }

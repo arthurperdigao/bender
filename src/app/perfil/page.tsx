@@ -1,7 +1,7 @@
 /**
  * src/app/perfil/page.tsx
  *
- * Página de Perfil do Usuário — Portal das Quatro Nações
+ * Página de Perfil do Usuário — Portal Avatar
  * Mostra dados do usuário, elemento espiritual e pontuações.
  */
 import { redirect } from "next/navigation";

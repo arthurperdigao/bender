@@ -8,6 +8,7 @@
 import { motion } from "framer-motion";
 import Link from "next/link";
 import { signOut } from "next-auth/react";
+import { UserBalancaWidget } from "@/components/dashboard/UserBalancaWidget";
 
 // Mapeamento de elementos para visuais
 const ELEMENT_VISUAL: Record<string, {
@@ -200,6 +201,9 @@ export default function ProfileClient({ profile }: { profile: Profile }) {
                     </div>
                 </motion.div>
 
+                {/* ── BALANÇA DO MUNDO WIDGET ── */}
+                <UserBalancaWidget userElement={profile.elementoNato} />
+
                 {/* ── PONTUAÇÕES GERAIS ── */}
                 <motion.div
                     className="mb-10"
@@ -211,7 +215,7 @@ export default function ProfileClient({ profile }: { profile: Profile }) {
                         className="text-xs uppercase tracking-[0.4em] mb-6 opacity-40 font-bold text-center"
                         style={{ fontFamily: "var(--font-cinzel), serif" }}
                     >
-                        Ranking das Nações
+                        Desempenho Pessoal
                     </h2>
                     <div className="grid grid-cols-2 gap-4">
                         <StatCard
@@ -313,6 +317,20 @@ export default function ProfileClient({ profile }: { profile: Profile }) {
                     animate={{ opacity: 1 }}
                     transition={{ delay: 0.9 }}
                 >
+                    <Link
+                        href="/mapa"
+                        className="flex-1 py-3 rounded-xl text-sm font-bold uppercase tracking-widest text-center transition-all duration-300 hover:scale-105"
+                        style={{
+                            background: "linear-gradient(135deg, #2c1e16, #4a3d34)",
+                            border: "1px solid #dcb670",
+                            color: "#e6dec1",
+                            fontFamily: "var(--font-cinzel), serif",
+                            textShadow: "0 2px 4px rgba(0,0,0,0.5)",
+                            boxShadow: "0 0 15px rgba(220,182,112,0.3)"
+                        }}
+                    >
+                        🗺️ Explorar Mapa
+                    </Link>
                     {!profile.elementoNato && (
                         <Link
                             href="/quiz"

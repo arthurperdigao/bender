@@ -51,9 +51,7 @@ export const ResultScreen = () => {
   // 3. Renderização Cinematográfica
   return (
     <motion.div
-      className="flex h-screen w-full flex-col items-center justify-center p-8 text-center"
-      // Fundo temático (ex: névoa)
-      style={{ backgroundImage: 'url(/assets/images/ui/spiritual_mist_bg.png)' }}
+      className="flex h-screen w-full flex-col items-center justify-center p-8 text-center bg-[#0b0e14]"
       variants={revealParentVariants}
       initial="hidden"
       animate="visible"

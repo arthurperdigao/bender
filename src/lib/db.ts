@@ -1,18 +1,13 @@
 /**
  * src/lib/db.ts
- * Instância singleton do PrismaClient para uso em toda a aplicação
- * Prisma v7 + SQLite: usa better-sqlite3 driver adapter com { url }
+ * PrismaClient singleton — Prisma 7
  */
+import "dotenv/config";
 import { PrismaClient } from "@prisma/client";
-import { PrismaBetterSqlite3 } from "@prisma/adapter-better-sqlite3";
 import path from "path";
 
 function createPrismaClient(): PrismaClient {
-    const dbPath = path.resolve(process.cwd(), "prisma", "dev.db");
-    const adapter = new PrismaBetterSqlite3({ url: dbPath });
-
     return new PrismaClient({
-        adapter,
         log: process.env.NODE_ENV === "development" ? ["error", "warn"] : ["error"],
     });
 }

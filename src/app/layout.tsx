@@ -5,6 +5,8 @@
 import type { Metadata } from 'next';
 import { Cinzel, Lora } from 'next/font/google';
 import SessionWrapper from '@/components/SessionWrapper';
+import { CartProvider } from '@/context/CartContext';
+import CartDrawer from '@/components/shop/CartDrawer';
 import './globals.css';
 
 // Fontes para o tema Épico/Pergaminho
@@ -22,7 +24,7 @@ const lora = Lora({
 });
 
 export const metadata: Metadata = {
-  title: 'Portal das Quatro Nações',
+  title: 'Portal Avatar',
   description: 'Sua jornada no mundo de Avatar começa aqui.',
 };
 
@@ -33,9 +35,12 @@ export default function RootLayout({
 }) {
   return (
     <html lang="pt-br" className={`${cinzel.variable} ${lora.variable}`}>
-      <body className="font-lora text-gray-800 bg-[#f4ecd8] antialiased">
+      <body className="font-lora text-white bg-[#0b0e14] antialiased">
         <SessionWrapper>
-          {children}
+          <CartProvider>
+            {children}
+            <CartDrawer />
+          </CartProvider>
         </SessionWrapper>
       </body>
     </html>

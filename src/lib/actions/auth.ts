@@ -45,21 +45,41 @@ export async function registerUser(formData: FormData): Promise<RegisterResult> 
         return { success: false, error: "Este email já está cadastrado." };
     }
 
-    // Hash da senha
+    // Hash da senha com custo 12 (seguro contra brute-force)
     const hashedPassword = await bcrypt.hash(password, 12);
 
-    // Criar usuário
-    await prisma.user.create({
-        data: {
-            nome,
-            sobrenome,
-            idade,
-            cidade,
-            email,
-            hashedPassword,
-        },
+    // Criar usuário + ranking inicial em uma transação
+    const newUser = await prisma.$transaction(async (tx) => {
+        const user = await tx.user.create({
+            data: {
+                nome,
+                sobrenome,
+                idade,
+                cidade,
+                email,
+                hashedPassword,
+            },
+        });
+
+        // Criar entrada de ranking zerada para o novo usuário
+        await tx.arenaRanking.create({
+            data: { userId: user.id },
+        });
+
+        // Log de auditoria — cadastro
+        await tx.auditLog.create({
+            data: {
+                userId: user.id,
+                action: "REGISTER",
+                success: true,
+                details: JSON.stringify({ email }),
+            },
+        });
+
+        return user;
     });
 
+    console.log("Novo usuário criado:", newUser.id);
     return { success: true };
 }
 
@@ -84,6 +104,15 @@ export async function loginUser(formData: FormData): Promise<LoginResult> {
         });
     } catch (error) {
         if (error instanceof AuthError) {
+            // Log de falha de login
+            await prisma.auditLog.create({
+                data: {
+                    action: "LOGIN",
+                    success: false,
+                    details: JSON.stringify({ email, reason: error.type }),
+                },
+            });
+
             switch (error.type) {
                 case "CredentialsSignin":
                     return { success: false, error: "Email ou senha incorretos." };
@@ -91,9 +120,26 @@ export async function loginUser(formData: FormData): Promise<LoginResult> {
                     return { success: false, error: "Erro ao fazer login. Tente novamente." };
             }
         }
-        // NextAuth v5 throws a NEXT_REDIRECT error here which we MUST re-throw
-        // for Next.js to handle the redirect and cookie setting correctly.
+        // NextAuth v5 lança NEXT_REDIRECT que DEVE ser re-lançado para o Next.js
+        // processar o redirect + cookies corretamente
         throw error;
+    }
+
+    // Atualizar lastLoginAt após login bem-sucedido
+    const user = await prisma.user.findUnique({ where: { email } });
+    if (user) {
+        await prisma.user.update({
+            where: { id: user.id },
+            data: { lastLoginAt: new Date() },
+        });
+        await prisma.auditLog.create({
+            data: {
+                userId: user.id,
+                action: "LOGIN",
+                success: true,
+                details: JSON.stringify({ email }),
+            },
+        });
     }
 
     return { success: true };
