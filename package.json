@@ -18,7 +18,7 @@
     "framer-motion": "^12.23.24",
     "howler": "^2.2.4",
     "lottie-react": "^2.4.1",
-    "next": "15.5.6",
+    "next": "^15.5.7",
     "next-auth": "^5.0.0-beta.30",
     "pg": "^8.20.0",
     "react": "19.1.0",
