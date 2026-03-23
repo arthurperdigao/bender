@@ -8,7 +8,11 @@ import path from "path";
 
 function createPrismaClient(): PrismaClient {
     return new PrismaClient({
-        datasourceUrl: process.env.DATABASE_URL,
+        datasources: {
+            db: {
+                url: process.env.DATABASE_URL,
+            },
+        },
         log: process.env.NODE_ENV === "development" ? ["error", "warn"] : ["error"],
     });
 }
